@@ -1,0 +1,3038 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestión de Jóvenes LAE Los Ríos</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0/dist/chartjs-plugin-datalabels.min.js"></script>
+    
+    <!-- Firebase -->
+    <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore-compat.js"></script>
+    
+    <style>
+        :root {
+            --apple-bg: #e8e8ec;
+            --apple-white: #ffffff;
+            --apple-gray: #86868b;
+            --apple-dark: #1d1d1f;
+            --apple-blue: #0071e3;
+            --apple-light-gray: #e8e8ec;
+            --apple-border: #d2d2d7;
+            --apple-success: #28cd41;
+            --apple-warning: #ff9f0a;
+            --apple-danger: #ff3b30;
+            --gradient-1: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            --gradient-2: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            --gradient-3: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            --gradient-4: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+            --gradient-5: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+            --sidebar-width: 340px;
+            --header-height: 70px;
+            --border-radius: 16px;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--apple-bg);
+            color: var(--apple-dark);
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+            line-height: 1.5;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        .app-container {
+            max-width: 1600px;
+            margin: 0 auto;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            background: var(--apple-bg);
+        }
+
+        .header {
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(20px) saturate(180%);
+            -webkit-backdrop-filter: blur(20px) saturate(180%);
+            border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+            padding: 0 24px;
+            height: var(--header-height);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .header-content {
+            display: flex;
+            align-items: baseline;
+            gap: 12px;
+        }
+
+        .app-title {
+            font-size: 28px;
+            font-weight: 600;
+            letter-spacing: -0.5px;
+            color: var(--apple-dark);
+        }
+
+        .header-subtitle {
+            font-size: 15px;
+            font-weight: 400;
+            color: var(--apple-gray);
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 12px;
+        }
+
+        .btn-icon {
+            background: none;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: 500;
+            color: var(--apple-dark);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.2s ease;
+        }
+
+        .btn-icon i {
+            font-size: 16px;
+        }
+
+        .btn-icon:hover {
+            background: rgba(0, 0, 0, 0.05);
+        }
+
+        .btn-icon.active {
+            background: var(--apple-blue);
+            color: white;
+        }
+
+        .btn-excel {
+            background: var(--apple-success);
+            color: white;
+            padding: 8px 16px;
+            border-radius: 20px;
+            border: none;
+            font-weight: 500;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.2s ease;
+        }
+
+        .btn-excel:hover {
+            background: #1a9e2f;
+        }
+
+        .btn-stats {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 8px 16px;
+            border-radius: 20px;
+            border: none;
+            font-weight: 500;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.2s ease;
+        }
+
+        .btn-stats:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(102, 126, 234, 0.3);
+        }
+
+        .main-content {
+            flex: 1;
+            display: flex;
+            overflow: hidden;
+        }
+
+        .sidebar {
+            width: var(--sidebar-width);
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(20px) saturate(180%);
+            -webkit-backdrop-filter: blur(20px) saturate(180%);
+            border-right: 1px solid rgba(0, 0, 0, 0.05);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .sidebar-header {
+            padding: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-bottom: 1px solid var(--apple-border);
+        }
+
+        .sidebar-header h2 {
+            font-size: 20px;
+            font-weight: 600;
+            letter-spacing: -0.3px;
+        }
+
+        .btn-add {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: var(--apple-blue);
+            border: none;
+            color: white;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s ease;
+        }
+
+        .btn-add:hover {
+            transform: scale(1.05);
+            box-shadow: 0 4px 12px rgba(0, 113, 227, 0.3);
+        }
+
+        .search-box {
+            padding: 16px 20px;
+            position: relative;
+        }
+
+        .search-box i {
+            position: absolute;
+            left: 36px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--apple-gray);
+            font-size: 14px;
+        }
+
+        .search-box input {
+            width: 100%;
+            padding: 10px 16px 10px 40px;
+            border: none;
+            background: rgba(0, 0, 0, 0.03);
+            border-radius: 10px;
+            font-size: 15px;
+            outline: none;
+            transition: all 0.2s ease;
+        }
+
+        .search-box input:focus {
+            background: white;
+            box-shadow: 0 0 0 3px rgba(0, 113, 227, 0.1);
+        }
+
+        .list-container {
+            flex: 1;
+            overflow-y: auto;
+            padding: 0 12px 12px;
+        }
+
+        .joven-item {
+            padding: 16px;
+            margin-bottom: 6px;
+            background: white;
+            border-radius: var(--border-radius);
+            cursor: pointer;
+            transition: all 0.2s ease;
+            border: 1px solid transparent;
+            position: relative;
+        }
+
+        .joven-item:hover {
+            background: rgba(0, 113, 227, 0.05);
+            border-color: rgba(0, 113, 227, 0.2);
+            transform: translateX(2px);
+        }
+
+        .joven-item.selected {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .joven-item.no-vigente {
+            border-left: 4px solid #ff3b30;
+            background: linear-gradient(135deg, #fff5f5 0%, #fff0f0 100%);
+            opacity: 0.85;
+        }
+
+        .joven-item.no-vigente h4 {
+            color: #c0392b;
+        }
+
+        .joven-item.no-vigente p {
+            color: #888;
+        }
+
+        .joven-item.no-vigente.selected {
+            background: linear-gradient(135deg, #c0392b 0%, #922b21 100%);
+            opacity: 1;
+        }
+
+        .badge-vigente {
+            display: inline-block;
+            background: #28cd41;
+            color: white;
+            font-size: 10px;
+            font-weight: 600;
+            padding: 2px 7px;
+            border-radius: 10px;
+            margin-left: 6px;
+            vertical-align: middle;
+            letter-spacing: 0.3px;
+        }
+
+        .badge-no-vigente {
+            display: inline-block;
+            background: #ff3b30;
+            color: white;
+            font-size: 10px;
+            font-weight: 600;
+            padding: 2px 7px;
+            border-radius: 10px;
+            margin-left: 6px;
+            vertical-align: middle;
+            letter-spacing: 0.3px;
+        }
+
+        .joven-item h4 {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+
+        .joven-item p {
+            font-size: 13px;
+            opacity: 0.7;
+        }
+
+        .btn-delete-item {
+            position: absolute;
+            right: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: none;
+            border: none;
+            color: var(--apple-danger);
+            cursor: pointer;
+            opacity: 0;
+            transition: opacity 0.2s;
+            font-size: 16px;
+            padding: 4px 8px;
+        }
+
+        .joven-item:hover .btn-delete-item {
+            opacity: 1;
+        }
+
+        .joven-item.selected .btn-delete-item {
+            color: white;
+            opacity: 1;
+        }
+
+        .content-area {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+            background: var(--apple-light-gray);
+        }
+
+        .stats-dashboard {
+            display: none;
+            background: white;
+            border-radius: var(--border-radius);
+            padding: 20px 24px;
+            margin-bottom: 16px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+        }
+
+        .stats-dashboard.show {
+            display: block;
+        }
+
+        .stats-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .stats-header h2 {
+            font-size: 22px;
+            font-weight: 600;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .sort-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            padding: 7px 14px;
+            font-size: 13px;
+            font-weight: 500;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            transition: opacity 0.2s;
+        }
+        .sort-btn:hover { opacity: 0.85; }
+
+        .chart-box h3 .sort-btn {
+            margin-left: auto;
+            font-size: 11px;
+            padding: 4px 10px;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 20px;
+            border-radius: var(--border-radius);
+            text-align: center;
+            box-shadow: 0 2px 12px rgba(0, 0, 0, 0.04);
+            border: 1px solid rgba(0, 0, 0, 0.04);
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+        }
+
+        .stat-card h3 {
+            font-size: 13px;
+            font-weight: 500;
+            color: var(--apple-gray);
+            margin-bottom: 8px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .stat-card .stat-number {
+            font-size: 36px;
+            font-weight: 700;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .charts-container {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .chart-box {
+            background: white;
+            padding: 20px;
+            border-radius: var(--border-radius);
+            box-shadow: 0 2px 12px rgba(0, 0, 0, 0.04);
+            border: 1px solid rgba(0, 0, 0, 0.04);
+        }
+
+        .chart-box h3 {
+            margin-bottom: 16px;
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--apple-dark);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .chart-box h3 i {
+            color: var(--apple-blue);
+        }
+
+        .chart-box canvas {
+            max-height: 200px !important;
+            width: 100% !important;
+        }
+
+        .welcome-screen {
+            text-align: center;
+            padding: 60px 20px;
+        }
+
+        .welcome-icon {
+            font-size: 56px;
+            color: var(--apple-gray);
+            margin-bottom: 20px;
+            opacity: 0.5;
+        }
+
+        .form-container {
+            background: white;
+            border-radius: var(--border-radius);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+            overflow: hidden;
+        }
+
+        .form-header {
+            padding: 20px 24px;
+            border-bottom: 1px solid var(--apple-border);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: white;
+        }
+
+        .form-header h2 {
+            font-size: 22px;
+            font-weight: 600;
+        }
+
+        .btn-close {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: none;
+            border: none;
+            color: var(--apple-gray);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .form-sections {
+            padding: 20px 24px;
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+            max-height: calc(100vh - 180px);
+            overflow-y: auto;
+        }
+
+        .form-section {
+            border-bottom: 1px solid var(--apple-border);
+            padding-bottom: 24px;
+        }
+
+        .form-section:last-child {
+            border-bottom: none;
+        }
+
+        .section-title {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 16px;
+            color: var(--apple-dark);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .section-title i {
+            color: var(--apple-blue);
+            font-size: 18px;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 16px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .form-group.full-width {
+            grid-column: span 2;
+        }
+
+        .form-group label {
+            font-size: 13px;
+            font-weight: 500;
+            color: var(--apple-dark);
+        }
+
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            padding: 8px 12px;
+            border: 1px solid var(--apple-border);
+            border-radius: 8px;
+            font-size: 14px;
+            font-family: inherit;
+            background: white;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: var(--apple-blue);
+            box-shadow: 0 0 0 3px rgba(0, 113, 227, 0.1);
+        }
+
+        .form-group input[readonly] {
+            background: var(--apple-light-gray);
+            color: var(--apple-gray);
+        }
+
+        .form-actions {
+            padding: 20px 24px;
+            border-top: 1px solid var(--apple-border);
+            display: flex;
+            justify-content: flex-end;
+            gap: 12px;
+            background: white;
+        }
+
+        .btn-primary,
+        .btn-secondary {
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            border: none;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(102, 126, 234, 0.3);
+        }
+
+        .btn-secondary {
+            background: var(--apple-light-gray);
+            color: var(--apple-dark);
+        }
+
+        .btn-small {
+            padding: 5px 10px;
+            font-size: 12px;
+            margin-left: 8px;
+            background: var(--apple-blue);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+        }
+
+        .details-container {
+            background: white;
+            border-radius: var(--border-radius);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+            padding: 20px;
+        }
+
+        .details-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 20px;
+            padding-bottom: 16px;
+            border-bottom: 1px solid var(--apple-border);
+        }
+
+        .details-title h2 {
+            font-size: 26px;
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+
+        .details-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .btn-danger {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+            padding: 8px 16px;
+            border-radius: 8px;
+            border: none;
+            font-weight: 500;
+            cursor: pointer;
+        }
+
+        .btn-edit {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            color: white;
+            padding: 8px 16px;
+            border-radius: 8px;
+            border: none;
+            font-weight: 500;
+            cursor: pointer;
+        }
+
+        .btn-pdf {
+            background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+            color: white;
+            padding: 8px 16px;
+            border-radius: 8px;
+            border: none;
+            font-weight: 500;
+            cursor: pointer;
+        }
+
+        .btn-delete {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+            padding: 8px 16px;
+            border-radius: 8px;
+            border: none;
+            font-weight: 500;
+            cursor: pointer;
+        }
+
+        .details-section {
+            margin-bottom: 20px;
+        }
+
+        .details-section h3 {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 14px;
+        }
+
+        .details-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+            background: var(--apple-light-gray);
+            padding: 16px;
+            border-radius: var(--border-radius);
+        }
+
+        .details-grid .detail-item {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            background: white;
+            padding: 10px 14px;
+            border-radius: 10px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+            border: 1px solid rgba(0, 113, 227, 0.1);
+        }
+
+        .detail-label {
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            color: var(--apple-blue);
+        }
+
+        .detail-value {
+            font-size: 15px;
+            font-weight: 500;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: var(--apple-gray);
+        }
+
+        .sentence-group {
+            background: rgba(0, 113, 227, 0.03);
+            padding: 14px;
+            border-radius: var(--border-radius);
+            margin-bottom: 14px;
+            border: 1px solid rgba(0, 113, 227, 0.1);
+        }
+
+        .sentence-title {
+            font-weight: 600;
+            margin-bottom: 10px;
+            color: var(--apple-blue);
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .sentence-title .btn-small {
+            background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+            color: white;
+            border: none;
+            padding: 5px 12px;
+            font-size: 12px;
+        }
+
+        .sentence-title .btn-small:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(67, 233, 123, 0.3);
+        }
+
+        .categoria-badge {
+            display: inline-block;
+            padding: 5px 14px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            margin-right: 8px;
+            color: white;
+        }
+
+        .select-with-add {
+            display: flex;
+            gap: 6px;
+            align-items: center;
+        }
+        .select-with-add select {
+            flex: 1;
+        }
+
+        .password-modal, .login-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            backdrop-filter: blur(8px);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .login-modal {
+            background: var(--apple-bg);
+            backdrop-filter: none;
+            z-index: 2000;
+        }
+
+        .password-modal.show, .login-modal.show {
+            display: flex;
+        }
+
+        .password-box, .login-box {
+            background: white;
+            padding: 40px;
+            border-radius: 24px;
+            text-align: center;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+            width: 380px;
+        }
+
+        .login-box h2, .password-box h3 {
+            margin-bottom: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .password-box input, .login-box input {
+            padding: 14px 16px;
+            border: 2px solid var(--apple-border);
+            border-radius: 12px;
+            font-size: 16px;
+            margin-bottom: 20px;
+            width: 100%;
+            transition: border-color 0.2s;
+        }
+
+        .password-box input:focus, .login-box input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .login-box button {
+            padding: 14px 28px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            width: 100%;
+        }
+
+        .error-msg {
+            color: var(--apple-danger);
+            margin-top: 10px;
+            font-size: 14px;
+        }
+
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: rgba(0, 0, 0, 0.15);
+            border-radius: 10px;
+        }
+
+        @media (max-width: 768px) {
+            .main-content { flex-direction: column; }
+            .sidebar { width: 100%; height: 280px; }
+            .form-grid { grid-template-columns: 1fr; }
+            .form-group.full-width { grid-column: span 1; }
+            .details-grid { grid-template-columns: 1fr; }
+            .stats-grid { grid-template-columns: repeat(2, 1fr); }
+            .charts-container { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+    <!-- Modal de Login -->
+    <div class="login-modal show" id="loginModal">
+        <div class="login-box">
+            <h2><i class="fas fa-lock"></i> LAE Los Ríos</h2>
+            <p style="color: var(--apple-gray); margin-bottom: 25px;">Ingrese la contraseña para acceder</p>
+            <input type="password" id="loginPasswordInput" placeholder="Contraseña" onkeypress="if(event.key==='Enter') verificarLogin()">
+            <button onclick="verificarLogin()">Ingresar al Sistema</button>
+            <div class="error-msg" id="loginError"></div>
+        </div>
+    </div>
+
+    <!-- Modal de contraseña para eliminar -->
+    <div class="password-modal" id="passwordModal">
+        <div class="password-box">
+            <h3><i class="fas fa-shield-alt"></i> Confirmar Eliminación</h3>
+            <p style="margin-bottom: 20px; color: var(--apple-gray);">Ingrese la contraseña para continuar</p>
+            <input type="password" id="passwordInput" placeholder="Contraseña" onkeypress="if(event.key==='Enter') verifyPassword()">
+            <div style="display: flex; gap: 10px;">
+                <button class="btn-secondary" onclick="closePasswordModal()" style="flex:1;">Cancelar</button>
+                <button class="btn-primary" onclick="verifyPassword()" style="flex:1;">Confirmar</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="app-container" id="appContainer" style="display: none;">
+        <header class="header">
+            <div class="header-content">
+                <h1 class="app-title">Jóvenes LAE Los Ríos</h1>
+                <span class="header-subtitle">Sistema de Gestión Integral</span>
+            </div>
+            <div class="header-actions">
+                <button class="btn-stats" onclick="toggleDashboard()"><i class="fas fa-chart-pie"></i> Panel Estadístico</button>
+                <button class="btn-excel" onclick="exportarExcelCompleto()"><i class="fas fa-file-excel"></i> Exportar Excel</button>
+                <button class="btn-icon active" onclick="toggleView('vigentes')" id="btnVigentes"><i class="fas fa-users"></i> Vigentes</button>
+                <button class="btn-icon" onclick="toggleView('noVigentes')" id="btnNoVigentes"><i class="fas fa-archive"></i> No Vigentes</button>
+            </div>
+        </header>
+
+        <main class="main-content">
+            <aside class="sidebar">
+                <div class="sidebar-header">
+                    <h2 id="sidebarTitle">Jóvenes Vigentes</h2>
+                    <button class="btn-add" onclick="showNewForm()"><i class="fas fa-plus"></i></button>
+                </div>
+                <div class="search-box">
+                    <i class="fas fa-search"></i>
+                    <input type="text" placeholder="Buscar por nombre o RUT..." id="searchInput" onkeyup="filterList()">
+                </div>
+                <div class="list-container" id="jovenesList"></div>
+            </aside>
+
+            <section class="content-area" id="contentArea">
+                <div class="stats-dashboard" id="statsDashboard">
+                    <div class="stats-header">
+                        <h2><i class="fas fa-chart-bar"></i> Panel Estadístico</h2>
+                        <button class="btn-excel" onclick="exportarEstadisticasExcel()" style="padding:8px 16px;"><i class="fas fa-download"></i> Descargar Reporte</button>
+                    </div>
+                    <div class="stats-grid">
+                        <div class="stat-card"><h3>Vigentes</h3><div class="stat-number" id="totalVigentes">0</div></div>
+                        <div class="stat-card"><h3>Ingreso sin contacto</h3><div class="stat-number" id="totalSinContacto">0</div></div>
+                        <div class="stat-card"><h3>Egresados</h3><div class="stat-number" id="totalEgresados">0</div></div>
+                        <div class="stat-card"><h3>Promedio Edad</h3><div class="stat-number" id="promedioEdad">0</div></div>
+                    </div>
+                    <div class="charts-container">
+                        <div class="chart-box">
+                            <h3><i class="fas fa-tag"></i> Categorías de Sanción <button class="sort-btn" onclick="sortChart('chartSanciones')"><i class="fas fa-sort-amount-down" id="iconSanciones"></i></button></h3>
+                            <canvas id="chartSanciones"></canvas>
+                        </div>
+                        <div class="chart-box">
+                            <h3><i class="fas fa-gavel"></i> Tipos de Delito</h3>
+                            <canvas id="chartDelitos"></canvas>
+                        </div>
+                    </div>
+                    <div class="charts-container">
+                        <div class="chart-box">
+                            <h3><i class="fas fa-home"></i> Tipo de Familia <button class="sort-btn" onclick="sortChart('chartFamilia')"><i class="fas fa-sort-amount-down" id="iconFamilia"></i></button></h3>
+                            <canvas id="chartFamilia"></canvas>
+                        </div>
+                        <div class="chart-box">
+                            <h3><i class="fas fa-calendar-alt"></i> Rango Etario <button class="sort-btn" onclick="sortChart('chartRangoEtario')"><i class="fas fa-sort-amount-down" id="iconRangoEtario"></i></button></h3>
+                            <canvas id="chartRangoEtario"></canvas>
+                        </div>
+                    </div>
+                    <div class="chart-box" style="margin-top:20px;">
+                        <h3><i class="fas fa-chart-network"></i> Tipicidad Penal por Rango Etario</h3>
+                        <canvas id="chartTipicidad"></canvas>
+                    </div>
+
+                    <!-- INGRESO SIN CONTACTO -->
+                    <div class="chart-box" style="margin-top:20px; grid-column: 1 / -1; border:1.5px solid #ff9f0a;">
+                        <h3 style="color:#b8660a;"><i class="fas fa-user-clock"></i> Jóvenes con Ingreso Sin Contacto</h3>
+                        <div id="sinContactoList" style="width:100%;">
+                            <div style="text-align:center; color:#888; padding:20px;">Cargando...</div>
+                        </div>
+                    </div>
+
+                    <!-- NECESIDADES DE URGENCIA -->
+                    <div class="chart-box" style="margin-top:20px; grid-column: 1 / -1; border:1.5px solid #ffb3a0;">
+                        <h3 style="color:#c0392b;"><i class="fas fa-exclamation-triangle"></i> Necesidades de Urgencia <span style="font-size:12px; font-weight:400; color:#888; margin-left:8px;">Plazo 7 días corridos desde ingreso EUE</span></h3>
+                        <div id="necesidadesUrgenciaList" style="width:100%;">
+                            <div style="text-align:center; color:#888; padding:20px;">Cargando...</div>
+                        </div>
+                    </div>
+
+                    <!-- INFORMES DE SEGUIMIENTO -->
+                    <div class="chart-box" style="margin-top:20px; grid-column: 1 / -1; border:1.5px solid #1A4A8A;">
+                        <h3 style="color:#1A4A8A;"><i class="fas fa-file-alt"></i> Informes de Seguimiento <span style="font-size:12px; font-weight:400; color:#888; margin-left:8px;">Cada 3 meses desde aprobación del Plan Inicial por el Tribunal</span></h3>
+                        <div id="informesSeguimientoList" style="width:100%;">
+                            <div style="text-align:center; color:#888; padding:20px;">Cargando...</div>
+                        </div>
+                    </div>
+
+                    <!-- PLANES DE INTERVENCIÓN -->
+                    <div class="chart-box" style="margin-top:20px; grid-column: 1 / -1;">
+                        <h3><i class="fas fa-clipboard-list"></i> Planes de Intervención — Inicial (día 15) y Profundizado (día 45) <span style="font-size:12px; font-weight:400; color:#888; margin-left:8px;">Calendario bancario Chile</span></h3>
+                        <div id="planesIntervencionList" style="width:100%;">
+                            <div style="text-align:center; color:#888; padding:20px;">Cargando...</div>
+                        </div>
+                    </div>
+
+                    <!-- CRAFFT/ASSIST Chart -->
+                    <div class="chart-box" style="margin-top:20px; grid-column: 1 / -1;">
+                        <h3><i class="fas fa-calendar-check"></i> Fechas CRAFFT/ASSIST — del más antiguo al más reciente</h3>
+                        <div id="crafftList" style="width:100%; overflow-x:auto;">
+                            <div style="text-align:center; color:#888; padding:20px;">Cargando...</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Modal CRAFFT -->
+                <div id="modalCrafft" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:9999; align-items:center; justify-content:center;">
+                    <div style="background:white; border-radius:16px; padding:28px; max-width:500px; width:90%; max-height:80vh; overflow-y:auto; box-shadow:0 20px 60px rgba(0,0,0,0.3);">
+                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
+                            <h3 id="modalCrafftTitle" style="font-size:18px; font-weight:600; color:#1d1d1f;"></h3>
+                            <button onclick="document.getElementById('modalCrafft').style.display='none'" style="background:none; border:none; font-size:22px; cursor:pointer; color:#888;">✕</button>
+                        </div>
+                        <div id="modalCrafftContent"></div>
+                    </div>
+                </div>
+
+                <div class="welcome-screen" id="welcomeScreen">
+                    <i class="fas fa-user-check welcome-icon"></i>
+                    <h3>Selecciona un joven para ver detalles</h3>
+                    <p>O crea un nuevo registro con el botón +</p>
+                </div>
+
+                <div class="form-container" id="formContainer" style="display: none;">
+                    <form id="jovenForm" onsubmit="saveJoven(event)">
+                        <div class="form-header">
+                            <h2 id="formTitle">Nuevo Registro</h2>
+                            <button type="button" class="btn-close" onclick="closeForm()"><i class="fas fa-times"></i></button>
+                        </div>
+                        <div class="form-sections">
+                            <!-- Datos Personales -->
+                            <div class="form-section">
+                                <h3 class="section-title"><i class="fas fa-user"></i>Datos Personales</h3>
+                                <div class="form-grid">
+                                    <div class="form-group"><label>Nombre *</label><input type="text" id="nombre" required></div>
+                                    <div class="form-group"><label>RUN/RUT *</label><input type="text" id="rut" required></div>
+                                    <div class="form-group"><label>Fecha nacimiento</label><input type="date" id="fechaNacimiento" onchange="calcularEdad()"></div>
+                                    <div class="form-group"><label>Edad</label><input type="number" id="edad" readonly></div>
+                                    <div class="form-group"><label>Género</label><select id="genero"><option value="">Seleccionar</option><option value="Femenino">Femenino</option><option value="Masculino">Masculino</option><option value="Otro">Otro</option></select></div>
+                                    <div class="form-group"><label>Nacionalidad</label><input type="text" id="nacionalidad" value="Chilena"></div>
+                                    <div class="form-group"><label>Situación EUE</label><select id="situacionEUE"><option value="">Seleccionar</option><option value="Vigente">Vigente</option><option value="Egresado">Egresado</option><option value="Ingreso sin contacto">Ingreso sin contacto</option></select></div>
+                                    <div class="form-group"><label>Edad ingreso</label><input type="number" id="edadIngreso"></div>
+                                    <div class="form-group"><label>Rango etario</label><select id="rangoEtario"><option value="">Seleccionar</option><option value="14 a 15 años">14 a 15 años</option><option value="16 a 17 años">16 a 17 años</option><option value="18 a 21 años">18 a 21 años</option><option value="22 a 25 años">22 a 25 años</option><option value="Mayor de 25 años">Mayor de 25 años</option></select></div>
+                                    <div class="form-group"><label>Pertenencia étnica</label><select id="pertenenciaEtnica"><option value="">Seleccionar</option><option value="Mapuche">Mapuche</option><option value="Aymara">Aymara</option><option value="Rapa Nui">Rapa Nui</option><option value="Ninguna">Ninguna</option></select></div>
+                                    <div class="form-group"><label>Ruralidad</label><select id="ruralidad"><option value="No">No</option><option value="Sí">Sí</option></select></div>
+                                    <div class="form-group"><label>Tipo joven</label><select id="tipoJoven"><option value="Nuevo">Nuevo</option><option value="Arrastre">Arrastre</option></select></div>
+                                    <div class="form-group"><label>Fecha ingreso EUE</label><input type="date" id="fechaIngresoEUE" onchange="calcularTiempoCumplido()"></div>
+                                    <div class="form-group"><label>Fecha aprobación Plan Inicial (Tribunal)</label><input type="date" id="fechaAprobacionPlan"></div>
+                                    <div class="form-group"><label>Comuna/Ciudad</label><input type="text" id="comuna"></div>
+                                    <div class="form-group full-width"><label>Dirección</label><input type="text" id="direccion"></div>
+                                    <div class="form-group"><label>Teléfono</label><input type="tel" id="telefono"></div>
+                                    <div class="form-group"><label>Email</label><input type="email" id="email"></div>
+                                </div>
+                            </div>
+
+                            <!-- Datos Familiares -->
+                            <div class="form-section">
+                                <h3 class="section-title"><i class="fas fa-home"></i>Datos Familiares</h3>
+                                <div class="form-grid">
+                                    <div class="form-group"><label>Padre</label><input type="text" id="nombrePadre"></div>
+                                    <div class="form-group"><label>Madre</label><input type="text" id="nombreMadre"></div>
+                                    <div class="form-group"><label>¿Hijos?</label><select id="tieneHijos"><option value="No">No</option><option value="Sí">Sí</option></select></div>
+                                    <div class="form-group"><label>Adulto a cargo</label><input type="text" id="adultoCargo"></div>
+                                    <div class="form-group"><label>Relación</label><input type="text" id="relacionAdulto"></div>
+                                    <div class="form-group"><label>Tipo familia</label><select id="tipoFamilia"><option value="">Seleccionar</option><option value="Nuclear">Nuclear</option><option value="Reconstituida">Reconstituida</option><option value="Monoparental madre">Monoparental madre</option><option value="Monoparental padre">Monoparental padre</option><option value="Extensa">Extensa</option><option value="Unipersonal">Unipersonal</option></select></div>
+                                    <div class="form-group"><label>Educación adulto</label><select id="educacionAdulto"><option value="">Seleccionar</option><option value="Básica completa">Básica completa</option><option value="Básica incompleta">Básica incompleta</option><option value="Media completa">Media completa</option><option value="Media incompleta">Media incompleta</option><option value="Técnica completa">Técnica completa</option><option value="Técnica incompleta">Técnica incompleta</option><option value="Universitaria completa">Universitaria completa</option><option value="Universitaria incompleta">Universitaria incompleta</option></select></div>
+                                    <div class="form-group"><label>Ocupación adulto</label><input type="text" id="ocupacionAdulto"></div>
+                                    <div class="form-group"><label>Contacto adulto</label><input type="text" id="contactoAdulto"></div>
+                                    <div class="form-group"><label>Vive con</label><select id="viveCon"><option value="">Seleccionar</option><option value="Ambos padres">Ambos padres</option><option value="Madre">Madre</option><option value="Padre">Padre</option><option value="Familiares">Familiares</option><option value="Tutores legales">Tutores legales</option><option value="Solo/a">Solo/a</option><option value="Pareja">Pareja</option><option value="Residencia institucional">Residencia institucional</option></select></div>
+                                    <div class="form-group full-width"><label>Observaciones</label><textarea id="obsFamiliares" rows="2"></textarea></div>
+                                </div>
+                            </div>
+
+                            <!-- Salud -->
+                            <div class="form-section">
+                                <h3 class="section-title"><i class="fas fa-heartbeat"></i>Salud</h3>
+                                <div class="form-grid">
+                                    <div class="form-group"><label>Previsión</label><select id="prevSalud"><option value="">Seleccionar</option><option value="FONASA">FONASA</option><option value="ISAPRE">ISAPRE</option><option value="Particular">Particular</option><option value="Ninguna">Ninguna</option></select></div>
+                                    <div class="form-group"><label>Tramo FONASA</label><select id="tramoFONASA"><option value="">Seleccionar</option><option value="A">A</option><option value="B">B</option><option value="C">C</option><option value="D">D</option></select></div>
+                                    <div class="form-group"><label>¿Salud física?</label><select id="problemaSaludFisica" onchange="toggleField('salud-fisica-field', this.value)"><option value="No">No</option><option value="Sí">Sí</option></select></div>
+                                    <div class="form-group full-width salud-fisica-field" style="display:none;"><label>Especificar</label><input type="text" id="especificarSaludFisica"></div>
+                                    <div class="form-group"><label>¿Salud mental?</label><select id="problemaSaludMental" onchange="toggleField('salud-mental-field', this.value)"><option value="No">No</option><option value="Sí">Sí</option></select></div>
+                                    <div class="form-group full-width salud-mental-field" style="display:none;"><label>Especificar</label><input type="text" id="especificarSaludMental"></div>
+                                    <div class="form-group"><label>¿Toma medicamentos?</label><select id="tomaMedicamentos"><option value="No">No</option><option value="Sí">Sí</option></select></div>
+                                    <div class="form-group full-width"><label>Medicamentos</label><input type="text" id="medicamentos"></div>
+                                    <div class="form-group"><label>Discapacidad</label><select id="discapacidad"><option value="Ninguna">Ninguna</option><option value="Física">Física</option><option value="Sensorial">Sensorial</option><option value="Intelectual">Intelectual</option><option value="Psíquica">Psíquica</option><option value="Múltiple">Múltiple</option></select></div>
+                                    <div class="form-group"><label>Fecha CRAFFT/ASSIST</label><input type="date" id="fechaCrafft"></div>
+                                    <div class="form-group"><label>¿Consumo drogas?</label><select id="consumoDrogas" onchange="toggleField('drogas-field', this.value)"><option value="No">No</option><option value="Sí">Sí</option></select></div>
+                                    <div class="form-group drogas-field" style="display:none;"><label>Tipo consumo</label><select id="tipoConsumo"><option value="">Seleccionar</option><option value="Habitual">Habitual</option><option value="Problemático">Problemático</option><option value="Ocasional">Ocasional</option><option value="Sin consumo">Sin consumo</option></select></div>
+                                    <div class="form-group drogas-field" style="display:none;"><label>Tipo de droga</label><input type="text" id="tipoDroga"></div>
+                                    <div class="form-group drogas-field" style="display:none;"><label>Institución tratamiento</label><input type="text" id="institucionTratamiento"></div>
+                                    <div class="form-group drogas-field" style="display:none;"><label>Adherencia</label><select id="tipoAdherencia"><option value="">Seleccionar</option><option value="Alta">Alta</option><option value="Media">Media</option><option value="Baja">Baja</option><option value="Nula">Nula</option></select></div>
+                                    <div class="form-group"><label>Simultaneidad SPE REX 412</label><select id="simultaneidadSPE" onchange="toggleField('spe-field', this.value)"><option value="No">No</option><option value="Sí">Sí</option></select></div>
+                                    <div class="form-group full-width spe-field" style="display:none;"><label>Especificar</label><input type="text" id="especificarSPE"></div>
+                                    <div class="form-group"><label>Simultaneidad RPA Ley 20.084</label><select id="simultaneidadRPA" onchange="toggleField('rpa-field', this.value)"><option value="No">No</option><option value="Sí">Sí</option></select></div>
+                                    <div class="form-group full-width rpa-field" style="display:none;"><label>Especificar</label><input type="text" id="especificarRPA"></div>
+                                    <div class="form-group full-width"><label>Observaciones</label><textarea id="obsSalud" rows="2"></textarea></div>
+                                </div>
+                            </div>
+
+                            <!-- Datos Judiciales CON BOTÓN PARA AGREGAR TIPOS DE DELITO -->
+                            <div class="form-section">
+                                <h3 class="section-title"><i class="fas fa-gavel"></i>Datos Judiciales</h3>
+                                <div class="form-grid">
+                                    <div class="form-group"><label>Tribunal origen</label><div class="select-with-add"><select id="tribunalOrigen"></select><button type="button" class="btn-small" onclick="agregarTribunal()"><i class="fas fa-plus"></i></button></div></div>
+                                    <div class="form-group"><label>Tribunal ejecución</label><div class="select-with-add"><select id="tribunalEjecucion"></select><button type="button" class="btn-small" onclick="agregarTribunal()"><i class="fas fa-plus"></i></button></div></div>
+                                    <div class="form-group"><label>Fecha derivación</label><input type="date" id="fechaDerivacion"></div>
+                                    
+                                    <!-- Delito 1 con botón -->
+                                    <div class="sentence-group full-width">
+                                        <div class="sentence-title">
+                                            Delito 1
+                                            <button type="button" class="btn-small" onclick="agregarTipoDelito('tipoDelito1')">
+                                                <i class="fas fa-plus"></i> Agregar tipo de delito
+                                            </button>
+                                        </div>
+                                        <div class="form-grid">
+                                            <div class="form-group">
+                                                <label>Tipo delito</label>
+                                                <div class="select-with-add">
+                                                    <select id="tipoDelito1"></select>
+                                                    <button type="button" class="btn-small" onclick="agregarTipoDelito('tipoDelito1')">
+                                                        <i class="fas fa-plus"></i>
+                                                    </button>
+                                                </div>
+                                            </div>
+                                            <div class="form-group full-width">
+                                                <label>Causal ingreso</label>
+                                                <input type="text" id="causalIngreso1">
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Delito 2 con botón -->
+                                    <div class="sentence-group full-width">
+                                        <div class="sentence-title">
+                                            Delito 2 (opcional)
+                                            <button type="button" class="btn-small" onclick="agregarTipoDelito('tipoDelito2')">
+                                                <i class="fas fa-plus"></i> Agregar tipo de delito
+                                            </button>
+                                        </div>
+                                        <div class="form-grid">
+                                            <div class="form-group">
+                                                <label>Tipo delito</label>
+                                                <div class="select-with-add">
+                                                    <select id="tipoDelito2"></select>
+                                                    <button type="button" class="btn-small" onclick="agregarTipoDelito('tipoDelito2')">
+                                                        <i class="fas fa-plus"></i>
+                                                    </button>
+                                                </div>
+                                            </div>
+                                            <div class="form-group full-width">
+                                                <label>Causal ingreso</label>
+                                                <input type="text" id="causalIngreso2">
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Delito 3 con botón -->
+                                    <div class="sentence-group full-width">
+                                        <div class="sentence-title">
+                                            Delito 3 (opcional)
+                                            <button type="button" class="btn-small" onclick="agregarTipoDelito('tipoDelito3')">
+                                                <i class="fas fa-plus"></i> Agregar tipo de delito
+                                            </button>
+                                        </div>
+                                        <div class="form-grid">
+                                            <div class="form-group">
+                                                <label>Tipo delito</label>
+                                                <div class="select-with-add">
+                                                    <select id="tipoDelito3"></select>
+                                                    <button type="button" class="btn-small" onclick="agregarTipoDelito('tipoDelito3')">
+                                                        <i class="fas fa-plus"></i>
+                                                    </button>
+                                                </div>
+                                            </div>
+                                            <div class="form-group full-width">
+                                                <label>Causal ingreso</label>
+                                                <input type="text" id="causalIngreso3">
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="sentence-group full-width"><div class="sentence-title">Sanción</div><div class="form-grid"><div class="form-group"><label>Años</label><input type="number" id="s1anios" min="0" value="0" onchange="calcularTiempoCumplido()"></div><div class="form-group"><label>Meses</label><input type="number" id="s1meses" min="0" value="0" onchange="calcularTiempoCumplido()"></div><div class="form-group"><label>Días</label><input type="number" id="s1dias" min="0" value="0" onchange="calcularTiempoCumplido()"></div><div class="form-group"><label>Abono</label><input type="number" id="s1abono" min="0" value="0" onchange="calcularTiempoCumplido()"></div></div></div>
+                                    
+                                    <div class="form-group"><label>Total días</label><input type="number" id="totalDiasSentencia" readonly></div>
+                                    <div class="form-group"><label>Días cumplidos</label><input type="number" id="diasCumplidos" readonly></div>
+                                    <div class="form-group"><label>Días restantes</label><input type="number" id="diasRestantes" readonly></div>
+                                    <div class="form-group"><label>Fecha egreso</label><input type="date" id="fechaEgresoEstimada" readonly></div>
+                                    
+                                    <div class="form-group full-width"><label>Categoría</label><div><span class="categoria-badge" id="catMenor1" style="background:#86868b;">Menor a 1 año</span><span class="categoria-badge" id="catMayorIgual1" style="background:#86868b;">≥ 1 año</span><span class="categoria-badge" id="catMayorIgual2" style="background:#86868b;">≥ 2 años</span><span class="categoria-badge" id="catMayorIgual3" style="background:#86868b;">≥ 3 años</span></div></div>
+                                    <div class="form-group full-width"><label>Observaciones</label><textarea id="obsJudiciales" rows="2"></textarea></div>
+                                </div>
+                            </div>
+
+                            <!-- Datos Educacionales -->
+                            <div class="form-section">
+                                <h3 class="section-title"><i class="fas fa-graduation-cap"></i>Educación</h3>
+                                <div class="form-grid">
+                                    <div class="form-group"><label>Nivel educacional</label><select id="nivelEducacional"><option value="">Seleccionar</option><option value="Básica incompleta">Básica incompleta</option><option value="Básica completa">Básica completa</option><option value="Media incompleta">Media incompleta</option><option value="Media completa">Media completa</option><option value="Técnica incompleta">Técnica incompleta</option><option value="Técnica completa">Técnica completa</option><option value="Universitaria incompleta">Universitaria incompleta</option><option value="Universitaria completa">Universitaria completa</option><option value="Deserción escolar">Deserción escolar</option></select></div>
+                                    <div class="form-group"><label>Último curso</label><input type="text" id="ultimoCurso"></div>
+                                    <div class="form-group"><label>¿Estudia?</label><select id="estudiaActualmente" onchange="toggleField('estudio-field', this.value)"><option value="No">No</option><option value="Sí">Sí</option></select></div>
+                                    <div class="form-group estudio-field" style="display:none;"><label>Tipo establecimiento</label><select id="tipoEstablecimiento"><option value="">Seleccionar</option><option value="Municipal">Municipal</option><option value="Particular Subvencionado">Particular Subvencionado</option><option value="Particular Pagado">Particular Pagado</option><option value="Universidad">Universidad</option><option value="Instituto Profesional">Instituto Profesional</option><option value="CFT">CFT</option><option value="Exámenes libres">Exámenes libres</option></select></div>
+                                    <div class="form-group estudio-field" style="display:none;"><label>Nombre institución</label><input type="text" id="nombreInstitucion"></div>
+                                    <div class="form-group estudio-field" style="display:none;"><label>Curso/Nivel</label><input type="text" id="cursoNivel"></div>
+                                    <div class="form-group estudio-field" style="display:none;"><label>Jornada</label><select id="jornada"><option value="">Seleccionar</option><option value="Diurna">Diurna</option><option value="Vespertina">Vespertina</option><option value="Media jornada">Media jornada</option><option value="Flexibilizada">Flexibilizada</option></select></div>
+                                    <div class="form-group full-width"><label>Observaciones</label><textarea id="obsEducacionales" rows="2"></textarea></div>
+                                </div>
+                            </div>
+
+                            <!-- Datos Laborales -->
+                            <div class="form-section">
+                                <h3 class="section-title"><i class="fas fa-briefcase"></i>Laboral</h3>
+                                <div class="form-grid">
+                                    <div class="form-group"><label>Situación laboral</label><select id="situacionLaboral" onchange="toggleLaboralFields()"><option value="">Seleccionar</option><option value="Desempleado">Desempleado</option><option value="Trabajando">Trabajando</option><option value="Estudiante (no trabaja)">Estudiante (no trabaja)</option><option value="Estudiante que trabaja">Estudiante que trabaja</option><option value="Pensionado">Pensionado</option></select></div>
+                                    <div class="form-group laboral-field" style="display:none;"><label>Tipo de contrato</label><select id="tipoContrato"><option value="">Seleccionar</option><option value="Indefinido">Indefinido</option><option value="Plazo fijo">Plazo fijo</option><option value="Honorarios">Honorarios</option><option value="Informal">Informal</option><option value="Independiente">Independiente</option></select></div>
+                                    <div class="form-group laboral-field" style="display:none;"><label>Tipo de trabajo</label><select id="tipoTrabajo"><option value="">Seleccionar</option><option value="Formal">Formal</option><option value="Informal">Informal</option></select></div>
+                                    <div class="form-group laboral-field" style="display:none;"><label>Ocupación/Cargo</label><input type="text" id="ocupacion"></div>
+                                    <div class="form-group laboral-field" style="display:none;"><label>Empleador</label><input type="text" id="empleador"></div>
+                                    <div class="form-group full-width"><label>Observaciones</label><textarea id="obsLaborales" rows="2"></textarea></div>
+                                </div>
+                            </div>
+
+                            <!-- Protección -->
+                            <div class="form-section">
+                                <h3 class="section-title"><i class="fas fa-shield-alt"></i>Protección</h3>
+                                <div class="form-grid">
+                                    <div class="form-group"><label>¿Programa protección?</label><select id="enProgramaProteccion" onchange="toggleField('proteccion-field', this.value)"><option value="No">No</option><option value="Sí">Sí</option></select></div>
+                                    <div class="form-group proteccion-field" style="display:none;"><label>Tipo programa</label><select id="tipoPrograma"><option value="">Seleccionar</option><option value="PRM">PRM</option><option value="PIE">PIE</option><option value="PEE">PEE</option><option value="DCE">DCE</option><option value="AFT-PF">AFT-PF</option><option value="OLN">OLN</option><option value="Residencia">Residencia</option><option value="FAE">FAE</option><option value="PPF">PPF</option></select></div>
+                                    <div class="form-group proteccion-field" style="display:none;"><label>Nombre programa</label><input type="text" id="nombrePrograma"></div>
+                                    <div class="form-group proteccion-field" style="display:none;"><label>Fecha ingreso</label><input type="date" id="fechaIngresoPrograma"></div>
+                                    <div class="form-group full-width"><label>Observaciones</label><textarea id="obsProteccion" rows="2"></textarea></div>
+                                </div>
+                            </div>
+
+                            <!-- Socioeconómico -->
+                            <div class="form-section">
+                                <h3 class="section-title"><i class="fas fa-chart-line"></i>Socioeconómico</h3>
+                                <div class="form-grid">
+                                    <div class="form-group"><label>RSH</label><select id="tieneRSH"><option value="No tiene">No tiene</option><option value="Sí tiene">Sí tiene</option></select></div>
+                                    <div class="form-group"><label>Tramo RSH</label><select id="tramoRSH"><option value="">Seleccionar</option><option value="40%">40%</option><option value="50%">50%</option><option value="60%">60%</option><option value="70%">70%</option><option value="80%">80%</option><option value="90%">90%</option><option value="100%">100%</option></select></div>
+                                    <div class="form-group"><label>Ingreso familiar</label><input type="number" id="ingresoFamiliar" oninput="calcularIngresoPerCapita()"></div>
+                                    <div class="form-group"><label>Integrantes</label><input type="number" id="integrantesHogar" min="1" value="1" oninput="calcularIngresoPerCapita()"></div>
+                                    <div class="form-group"><label>Per cápita</label><input type="number" id="ingresoPerCapita" readonly></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="form-actions" style="flex-direction:column; gap:14px;">
+                                <!-- NECESIDAD DE URGENCIA AL INGRESO -->
+                                <div style="background:linear-gradient(135deg,#fff3f0,#fff8f5); border:1.5px solid #ff6b35; border-radius:14px; padding:16px 18px; width:100%; box-sizing:border-box;">
+                                    <h4 style="margin:0 0 12px; font-size:14px; font-weight:700; color:#c0392b; display:flex; align-items:center; gap:8px;">
+                                        <i class="fas fa-exclamation-triangle"></i> Necesidad de Urgencia al Ingreso
+                                    </h4>
+                                    <div style="display:flex; align-items:center; gap:20px; flex-wrap:wrap;">
+                                        <div style="display:flex; align-items:center; gap:10px;">
+                                            <label style="font-size:13px; font-weight:600; color:#555;">¿Presentó necesidad de urgencia?</label>
+                                            <select id="tuvoNecesidadUrgencia" onchange="toggleUrgenciaTipo(this.value)" style="border:1.5px solid #ffb3a0; border-radius:8px; padding:6px 12px; font-size:13px; background:white;">
+                                                <option value="No">No</option>
+                                                <option value="Sí">Sí</option>
+                                            </select>
+                                        </div>
+                                        <div id="urgenciaTipoField" style="display:none; align-items:center; gap:10px;">
+                                            <label style="font-size:13px; font-weight:600; color:#555;">Tipo:</label>
+                                            <select id="tipoNecesidadUrgencia" style="border:1.5px solid #ffb3a0; border-radius:8px; padding:6px 12px; font-size:13px; background:white;">
+                                                <option value="Salud Mental">Salud Mental</option>
+                                                <option value="Salud Física">Salud Física</option>
+                                                <option value="Protección Especializada">Protección Especializada</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div style="display:flex; gap:10px; justify-content:flex-end; width:100%;">
+                                    <button type="button" class="btn-secondary" onclick="closeForm()">Cancelar</button>
+                                    <button type="submit" class="btn-primary">Guardar Registro</button>
+                                </div>
+                            </div>
+                        <input type="hidden" id="jovenId">
+                    </form>
+                </div>
+
+                <div class="details-container" id="detailsContainer" style="display: none;"></div>
+            </section>
+        </main>
+    </div>
+
+    <script>
+        // ========== CONFIGURACIÓN DE FIREBASE ==========
+        const firebaseConfig = {
+            apiKey: "AIzaSyDA_ckp5HAv18aDEnSS2x4hVikyQ8TcsmU",
+            authDomain: "sistema-lae-admin.firebaseapp.com",
+            projectId: "sistema-lae-admin",
+            storageBucket: "sistema-lae-admin.firebasestorage.app",
+            messagingSenderId: "863257823762",
+            appId: "1:863257823762:web:d5ac2c6bdc9a1bea6d26cb"
+        };
+        
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+        
+        // ========== CONFIGURACIÓN INICIAL ==========
+        const ACCESS_PASSWORD = 'lae1301';
+        const DELETE_PASSWORD = 'lae1301';
+        
+        let CATEGORIAS_DELITOS = ["CONTRA EL ORDEN DE LAS FAMILIAS", "DELITOS CONTRA LA PROPIEDAD", "DELITOS CONTRA LAS PERSONAS", "TRAFICO ILICITO DE ESTUPEFACIENTES Y SUSTANCIAS SICOTROPICAS", "LEY 17.798 CONTROL DE ARMAS", "DELITOS CONTRA EL ORDEN Y LA SEGURIDAD PUBLICA", "LEY 18.290 TRANSITO"];
+        let tribunalesChile = ["Juzgado de Garantía de Valdivia", "Juzgado de Garantía de La Unión", "Juzgado de Garantía de Río Bueno", "Juzgado de Garantía de Panguipulli", "Juzgado de Garantía de Los Lagos", "Juzgado de Garantía de Paillaco", "Juzgado de Garantía de Temuco", "Juzgado de Garantía de Santiago", "Tribunal Oral en lo Penal de Valdivia", "Tribunal Oral en lo Penal de Temuco", "Tribunal Oral en lo Penal de Santiago"];
+        
+        let chartSanciones, chartDelitos, chartFamilia, chartRangoEtario, chartTipicidad;
+        let jovenesVigentes = [], jovenesNoVigentes = [], currentView = 'vigentes', selectedJoven = null, editingId = null;
+        let pendingAction = null;
+        let sincronizacionActiva = true;
+
+        const chartColors = ['#667eea', '#764ba2', '#f093fb', '#f5576c', '#4facfe', '#00f2fe', '#43e97b', '#38f9d7', '#fa709a', '#fee140'];
+
+        // ========== FUNCIONES PARA AGREGAR TIPOS DE DELITO ==========
+        function agregarTipoDelito(selectId) {
+            const nuevoDelito = prompt('Ingrese el nuevo tipo de delito:', '');
+            
+            if (nuevoDelito && nuevoDelito.trim() !== '') {
+                const delitoLimpio = nuevoDelito.trim().toUpperCase();
+                
+                if (!CATEGORIAS_DELITOS.includes(delitoLimpio)) {
+                    CATEGORIAS_DELITOS.push(delitoLimpio);
+                    CATEGORIAS_DELITOS.sort();
+                    
+                    localStorage.setItem('categoriasDelitosPersonalizadas', JSON.stringify(CATEGORIAS_DELITOS));
+                    actualizarSelectsTipoDelito();
+                    
+                    const select = document.getElementById(selectId);
+                    if (select) {
+                        select.value = delitoLimpio;
+                    }
+                    
+                    alert(`✅ Tipo de delito "${delitoLimpio}" agregado correctamente`);
+                } else {
+                    alert('⚠️ Este tipo de delito ya existe');
+                }
+            }
+        }
+
+        function actualizarSelectsTipoDelito() {
+            for (let i = 1; i <= 3; i++) {
+                const select = document.getElementById(`tipoDelito${i}`);
+                if (select) {
+                    const valorActual = select.value;
+                    select.innerHTML = '<option value="">Seleccionar</option>';
+                    CATEGORIAS_DELITOS.forEach(delito => {
+                        const option = document.createElement('option');
+                        option.value = delito;
+                        option.textContent = delito;
+                        select.appendChild(option);
+                    });
+                    if (valorActual && CATEGORIAS_DELITOS.includes(valorActual)) {
+                        select.value = valorActual;
+                    }
+                }
+            }
+        }
+
+        function cargarTiposDelitoPersonalizados() {
+            const guardados = localStorage.getItem('categoriasDelitosPersonalizadas');
+            if (guardados) {
+                const personalizados = JSON.parse(guardados);
+                personalizados.forEach(delito => {
+                    if (!CATEGORIAS_DELITOS.includes(delito)) {
+                        CATEGORIAS_DELITOS.push(delito);
+                    }
+                });
+                CATEGORIAS_DELITOS.sort();
+            }
+        }
+
+        // ========== FUNCIONES DE SINCRONIZACIÓN CON FIREBASE ==========
+        async function guardarEnFirebase() {
+            if (!sincronizacionActiva) return;
+            try {
+                // Primero guardamos en localStorage como respaldo
+                localStorage.setItem('jovenesVigentesLAE', JSON.stringify(jovenesVigentes));
+                localStorage.setItem('jovenesNoVigentesLAE', JSON.stringify(jovenesNoVigentes));
+                
+                // Luego en Firebase
+                for (const joven of jovenesVigentes) {
+                    await db.collection('jovenesVigentes').doc(joven.id).set(joven);
+                }
+                
+                for (const joven of jovenesNoVigentes) {
+                    await db.collection('jovenesNoVigentes').doc(joven.id).set(joven);
+                }
+                
+                console.log('✅ Datos sincronizados con Firebase');
+            } catch (error) {
+                console.error('❌ Error al sincronizar con Firebase:', error);
+            }
+        }
+        
+        async function cargarDesdeFirebase() {
+            try {
+                const vigentesSnapshot = await db.collection('jovenesVigentes').get();
+                const noVigentesSnapshot = await db.collection('jovenesNoVigentes').get();
+                
+                const vigentes = [];
+                const noVigentes = [];
+                
+                vigentesSnapshot.forEach(doc => {
+                    vigentes.push(doc.data());
+                });
+                
+                noVigentesSnapshot.forEach(doc => {
+                    noVigentes.push(doc.data());
+                });
+                
+                if (vigentes.length > 0 || noVigentes.length > 0) {
+                    jovenesVigentes = vigentes;
+                    jovenesNoVigentes = noVigentes;
+                    localStorage.setItem('jovenesVigentesLAE', JSON.stringify(jovenesVigentes));
+                    localStorage.setItem('jovenesNoVigentesLAE', JSON.stringify(jovenesNoVigentes));
+                    console.log('✅ Datos cargados desde Firebase');
+                    return true;
+                }
+                return false;
+            } catch (error) {
+                console.error('❌ Error al cargar desde Firebase:', error);
+                return false;
+            }
+        }
+
+        // ========== FUNCIONES PRINCIPALES ==========
+        function verificarLogin() {
+            try {
+                const pwd = document.getElementById('loginPasswordInput').value;
+                if (pwd === ACCESS_PASSWORD) {
+                    document.getElementById('loginModal').classList.remove('show');
+                    document.getElementById('appContainer').style.display = 'flex';
+                    inicializarApp().catch(function(err) {
+                        console.error('Error en inicializarApp:', err);
+                        alert('Error al iniciar la aplicación: ' + err.message);
+                    });
+                } else {
+                    document.getElementById('loginError').textContent = 'Contraseña incorrecta';
+                }
+            } catch(err) {
+                console.error('Error en verificarLogin:', err);
+                alert('Error crítico: ' + err.message);
+            }
+        }
+
+        async function inicializarApp() {
+            try { Chart.register(ChartDataLabels); } catch(e) {}
+            cargarTiposDelitoPersonalizados();
+            cargarListas();
+            
+            const cargado = await cargarDesdeFirebase();
+            
+            if (!cargado) {
+                const v = localStorage.getItem('jovenesVigentesLAE');
+                const nv = localStorage.getItem('jovenesNoVigentesLAE');
+                if (v) jovenesVigentes = JSON.parse(v);
+                if (nv) jovenesNoVigentes = JSON.parse(nv);
+            }
+
+            // Recalcular y actualizar en Firebase todos los registros con campos de sanción vacíos o desactualizados
+            await recalcularYActualizarSanciones();
+
+            renderList();
+            actualizarSelectsTipoDelito();
+        }
+
+        async function recalcularYActualizarSanciones() {
+            let huboActualizacion = false;
+            const actualizarLista = async (lista, coleccion) => {
+                for (let i = 0; i < lista.length; i++) {
+                    const j = lista[i];
+                    if (!j.fechaIngresoEUE) continue;
+                    const sd = calcularDatosSancion(j);
+                    const necesitaUpdate = 
+                        String(j.totalDiasSentencia) !== String(sd.totalDiasSentencia) ||
+                        String(j.diasCumplidos) !== String(sd.diasCumplidos) ||
+                        String(j.diasRestantes) !== String(sd.diasRestantes) ||
+                        j.fechaEgresoEstimada !== sd.fechaEgresoEstimada;
+                    if (necesitaUpdate) {
+                        lista[i].totalDiasSentencia  = sd.totalDiasSentencia;
+                        lista[i].diasCumplidos        = sd.diasCumplidos;
+                        lista[i].diasRestantes        = sd.diasRestantes;
+                        lista[i].fechaEgresoEstimada  = sd.fechaEgresoEstimada;
+                        lista[i].categoriaSancion      = getCategoriaSancionReal(lista[i]);
+                        if (sincronizacionActiva) {
+                            try { await db.collection(coleccion).doc(j.id).set(lista[i]); } catch(e) { console.warn('No se pudo actualizar Firebase para', j.id); }
+                        }
+                        huboActualizacion = true;
+                    }
+                }
+            };
+            await actualizarLista(jovenesVigentes, 'jovenesVigentes');
+            await actualizarLista(jovenesNoVigentes, 'jovenesNoVigentes');
+            if (huboActualizacion) {
+                localStorage.setItem('jovenesVigentesLAE', JSON.stringify(jovenesVigentes));
+                localStorage.setItem('jovenesNoVigentesLAE', JSON.stringify(jovenesNoVigentes));
+                console.log('✅ Campos de sanción recalculados y sincronizados en Firebase');
+            }
+        }
+
+        function cargarListas() {
+            const t = localStorage.getItem('tribunalesPersonalizados');
+            if (t) tribunalesChile = JSON.parse(t);
+            const selT1 = document.getElementById('tribunalOrigen'), selT2 = document.getElementById('tribunalEjecucion');
+            if (selT1) {
+                selT1.innerHTML = selT2.innerHTML = '<option value="">Seleccionar</option>';
+                tribunalesChile.forEach(t => { selT1.add(new Option(t, t)); selT2.add(new Option(t, t)); });
+            }
+        }
+
+        function agregarTribunal() {
+            const n = prompt('Nuevo tribunal:');
+            if (n && !tribunalesChile.includes(n)) { tribunalesChile.push(n); tribunalesChile.sort(); localStorage.setItem('tribunalesPersonalizados', JSON.stringify(tribunalesChile)); cargarListas(); }
+        }
+
+        function toggleField(c, v) { document.querySelectorAll(`.${c}`).forEach(e => e.style.display = v === 'Sí' ? 'block' : 'none'); }
+        function toggleLaboralFields() { const v = document.getElementById('situacionLaboral').value; document.querySelectorAll('.laboral-field').forEach(e => e.style.display = (v === 'Trabajando' || v === 'Estudiante que trabaja') ? 'block' : 'none'); }
+
+        function calcularEdad() {
+            const f = document.getElementById('fechaNacimiento').value;
+            if (f) { const h = new Date(), n = new Date(f); let e = h.getFullYear() - n.getFullYear(); if (h.getMonth() < n.getMonth() || (h.getMonth() === n.getMonth() && h.getDate() < n.getDate())) e--; document.getElementById('edad').value = e; }
+        }
+
+        function calcularTiempoCumplido() {
+            const f  = document.getElementById('fechaIngresoEUE')?.value;
+            const a  = parseInt(document.getElementById('s1anios')?.value)  || 0;
+            const m  = parseInt(document.getElementById('s1meses')?.value)  || 0;
+            const d  = parseInt(document.getElementById('s1dias')?.value)   || 0;
+            const ab = parseInt(document.getElementById('s1abono')?.value)  || 0;
+
+            // Limpiar campos si no hay fecha o duración
+            if (!f || (!a && !m && !d)) {
+                ['totalDiasSentencia','diasCumplidos','diasRestantes','fechaEgresoEstimada'].forEach(id => {
+                    const el = document.getElementById(id);
+                    if (el) el.value = '';
+                });
+                ['catMenor1','catMayorIgual1','catMayorIgual2','catMayorIgual3'].forEach(id => {
+                    const el = document.getElementById(id);
+                    if (el) el.style.background = '#86868b';
+                });
+                return;
+            }
+
+            // Parsear fecha sin problema de zona horaria
+            const parts = f.split('-');
+            const ing = new Date(parseInt(parts[0]), parseInt(parts[1]) - 1, parseInt(parts[2]), 12, 0, 0);
+
+            // 1 año = 365 días exactos, 1 mes = 30 días exactos (sin depender del calendario)
+            const totalBruto = (a * 365) + (m * 30) + d;
+            const diasEfectivos = Math.max(0, totalBruto - ab);
+
+            // Fecha egreso REAL = ingreso + días efectivos
+            const egrReal = new Date(ing.getTime() + diasEfectivos * 86400000);
+
+            if (document.getElementById('totalDiasSentencia'))
+                document.getElementById('totalDiasSentencia').value = totalBruto;
+
+            // Días cumplidos desde ingreso hasta hoy
+            const hoy = new Date();
+            const hoyDate = new Date(hoy.getFullYear(), hoy.getMonth(), hoy.getDate(), 12, 0, 0);
+            const cumplidos = Math.max(0, Math.round((hoyDate - ing) / 86400000));
+
+            // Días restantes = días hasta egreso real desde hoy
+            const diasParaEgreso = Math.max(0, Math.round((egrReal - hoyDate) / 86400000));
+
+            if (document.getElementById('diasCumplidos'))
+                document.getElementById('diasCumplidos').value = cumplidos;
+            if (document.getElementById('diasRestantes'))
+                document.getElementById('diasRestantes').value = diasParaEgreso;
+
+            // Fecha egreso formateada
+            const yyyy = egrReal.getFullYear();
+            const mm   = String(egrReal.getMonth() + 1).padStart(2, '0');
+            const dd   = String(egrReal.getDate()).padStart(2, '0');
+            if (document.getElementById('fechaEgresoEstimada'))
+                document.getElementById('fechaEgresoEstimada').value = `${yyyy}-${mm}-${dd}`;
+
+            // Resaltar categoría según días efectivos (bruto - abono)
+            ['catMenor1','catMayorIgual1','catMayorIgual2','catMayorIgual3'].forEach(id => {
+                const el = document.getElementById(id);
+                if (el) el.style.background = '#86868b';
+            });
+            if      (diasEfectivos < 365)  document.getElementById('catMenor1')?.style.setProperty('background', '#28cd41');
+            else if (diasEfectivos < 730)  document.getElementById('catMayorIgual1')?.style.setProperty('background', '#ff9f0a');
+            else if (diasEfectivos < 1095) document.getElementById('catMayorIgual2')?.style.setProperty('background', '#ff3b30');
+            else                           document.getElementById('catMayorIgual3')?.style.setProperty('background', '#0071e3');
+        }
+
+        function calcularIngresoPerCapita() {
+            const ing = parseFloat(document.getElementById('ingresoFamiliar')?.value) || 0;
+            const int = parseInt(document.getElementById('integrantesHogar')?.value) || 1;
+            if (document.getElementById('ingresoPerCapita')) document.getElementById('ingresoPerCapita').value = Math.round(ing / int);
+        }
+
+        function getCategoriaSancion(d) { const a = (d || 0) / 365; if (a < 1) return 'Menor a 1 año'; if (a < 2) return '≥ 1 año'; if (a < 3) return '≥ 2 años'; return '≥ 3 años'; }
+
+        // ── Calcula en tiempo real todos los campos de sanción a partir de los datos fuente ──
+        function calcularDatosSancion(j) {
+            const fechaStr = j.fechaIngresoEUE;
+            const anios = parseInt(j.s1anios) || 0;
+            const meses = parseInt(j.s1meses) || 0;
+            const dias  = parseInt(j.s1dias)  || 0;
+            const abono = parseInt(j.s1abono) || 0;
+
+            if (!fechaStr || (!anios && !meses && !dias)) {
+                return {
+                    totalDiasSentencia:  j.totalDiasSentencia  || '',
+                    diasCumplidos:       j.diasCumplidos       || '',
+                    diasRestantes:       j.diasRestantes        || '',
+                    fechaEgresoEstimada: j.fechaEgresoEstimada || ''
+                };
+            }
+
+            // Parsear sin problema de zona horaria
+            const parts = fechaStr.split('-');
+            const ing = new Date(parseInt(parts[0]), parseInt(parts[1]) - 1, parseInt(parts[2]), 12, 0, 0);
+
+            // Total días brutos: 1 año = 365 días, 1 mes = 30 días (sin calendario)
+            const totalBruto = (anios * 365) + (meses * 30) + dias;
+
+            // Fecha egreso REAL = ingreso + días brutos - abono
+            const diasEfectivos = totalBruto - abono;
+            const egrReal = new Date(ing.getTime() + diasEfectivos * 86400000);
+
+            // Días cumplidos desde ingreso hasta hoy
+            const hoy = new Date();
+            const hoyDate = new Date(hoy.getFullYear(), hoy.getMonth(), hoy.getDate(), 12, 0, 0);
+            const cumplidos = Math.max(0, Math.round((hoyDate - ing) / 86400000));
+
+            // Días restantes = días hasta fecha egreso real desde hoy
+            const diasParaEgreso = Math.max(0, Math.round((egrReal - hoyDate) / 86400000));
+
+            const yyyy = egrReal.getFullYear();
+            const mm   = String(egrReal.getMonth() + 1).padStart(2, '0');
+            const dd   = String(egrReal.getDate()).padStart(2, '0');
+            const fechaEgreso = `${yyyy}-${mm}-${dd}`;
+
+            return {
+                totalDiasSentencia:  totalBruto,
+                diasCumplidos:       cumplidos,
+                diasRestantes:       diasParaEgreso,
+                fechaEgresoEstimada: fechaEgreso
+            };
+        }
+
+        function getCategoriaSancionReal(j) {
+            const anios = parseInt(j.s1anios) || 0;
+            const meses = parseInt(j.s1meses) || 0;
+            const dias  = parseInt(j.s1dias)  || 0;
+            const abono = parseInt(j.s1abono) || 0;
+            if (!anios && !meses && !dias) return 'Sin datos';
+
+            // 1 año = 365 días exactos, 1 mes = 30 días exactos (igual que la lógica judicial)
+            const diasBrutos = (anios * 365) + (meses * 30) + dias;
+            const diasEfectivos = Math.max(0, diasBrutos - abono);
+
+            if (diasEfectivos < 365)  return 'Menor a 1 año';
+            if (diasEfectivos < 730)  return '≥ 1 año';
+            if (diasEfectivos < 1095) return '≥ 2 años';
+            return '≥ 3 años';
+        }
+        
+        function formatSancionTexto(j) {
+            const anios = j.s1anios || 0, meses = j.s1meses || 0, dias = j.s1dias || 0;
+            let texto = '';
+            if (anios > 0) texto += `${anios} año${anios !== 1 ? 's' : ''}`;
+            if (meses > 0) texto += `${texto ? ', ' : ''}${meses} mes${meses !== 1 ? 'es' : ''}`;
+            if (dias > 0) texto += `${texto ? ', ' : ''}${dias} día${dias !== 1 ? 's' : ''}`;
+            return texto || '0 días';
+        }
+
+        async function saveData() { 
+            localStorage.setItem('jovenesVigentesLAE', JSON.stringify(jovenesVigentes)); 
+            localStorage.setItem('jovenesNoVigentesLAE', JSON.stringify(jovenesNoVigentes));
+            await guardarEnFirebase();
+        }
+
+        function toggleView(v) {
+            currentView = v;
+            document.getElementById('btnVigentes').classList.toggle('active', v === 'vigentes');
+            document.getElementById('btnNoVigentes').classList.toggle('active', v === 'noVigentes');
+            document.getElementById('sidebarTitle').textContent = v === 'vigentes' ? 'Jóvenes Vigentes' : 'Jóvenes No Vigentes';
+            selectedJoven = null; closeForm(); renderList();
+        }
+
+        function renderList() {
+            const c = document.getElementById('jovenesList');
+            const j = currentView === 'vigentes' ? jovenesVigentes : jovenesNoVigentes;
+            const s = document.getElementById('searchInput')?.value.toLowerCase() || '';
+            const f = j.filter(x => (x.nombre||'').toLowerCase().includes(s) || (x.rut||'').toLowerCase().includes(s));
+            c.innerHTML = f.length ? f.map(x => {
+                const isNoVig = currentView === 'noVigentes';
+                const isSelected = selectedJoven?.id === x.id;
+                const badge = isNoVig ? '<span class="badge-no-vigente">EGRESADO</span>' : '<span class="badge-vigente">VIGENTE</span>';
+                const cls = ['joven-item', isSelected ? 'selected' : '', isNoVig ? 'no-vigente' : ''].filter(Boolean).join(' ');
+                return `<div class="${cls}" onclick="selectJoven('${x.id}')"><h4>${x.nombre||''}${badge}</h4><p>${x.rut||''} | ${x.situacionEUE||''}</p><button class="btn-delete-item" onclick="event.stopPropagation(); requestDelete('${x.id}')"><i class="fas fa-trash"></i></button></div>`;
+            }).join('') : '<div class="empty-state"><i class="fas fa-users"></i><p>No hay jóvenes</p></div>';
+        }
+
+        function filterList() { renderList(); }
+
+        function selectJoven(id) {
+            const j = (currentView === 'vigentes' ? jovenesVigentes : jovenesNoVigentes).find(x => x.id === id);
+            if (j) { selectedJoven = j; showDetails(j); renderList(); }
+        }
+
+        function showDetails(j) {
+            document.getElementById('formContainer').style.display = 'none'; 
+            document.getElementById('welcomeScreen').style.display = 'none';
+            document.getElementById('statsDashboard').classList.remove('show'); 
+            const dc = document.getElementById('detailsContainer'); dc.style.display = 'block';
+            
+            // Calcular en tiempo real para mostrar datos siempre actualizados
+            const sd = calcularDatosSancion(j);
+            
+            const fields = [
+                ['Nombre', j.nombre], ['RUT', j.rut], ['Edad', j.edad], ['Comuna', j.comuna], ['Situación EUE', j.situacionEUE],
+                ['Rango etario', j.rangoEtario], ['Tipo familia', j.tipoFamilia], ['Tribunal origen', j.tribunalOrigen],
+                ['Delito principal', j.tipoDelito1], ['Causal ingreso', j.causalIngreso1], ['Fecha ingreso EUE', j.fechaIngresoEUE],
+                ['Sanción', formatSancionTexto(j)], ['Abono', (j.s1abono||0) + ' días'],
+                ['Total días sentencia', sd.totalDiasSentencia], ['Días cumplidos', sd.diasCumplidos], ['Días restantes', sd.diasRestantes],
+                ['Fecha egreso estimada', sd.fechaEgresoEstimada], ['Categoría sanción', getCategoriaSancionReal(j)]
+            ].filter(f => f[1] !== undefined && f[1] !== null && f[1] !== '').map(f => `<div class="detail-item"><span class="detail-label">${f[0]}</span><span class="detail-value">${f[1]}</span></div>`).join('');
+            
+            dc.innerHTML = `<div class="details-header"><div class="details-title"><h2>${j.nombre||''}</h2><p>${j.rut||''}</p></div><div class="details-actions"><button class="btn-edit" onclick="editJoven('${j.id}')"><i class="fas fa-edit"></i> Editar</button>${currentView==='vigentes'?`<button class="btn-danger" onclick="moveToNoVigente('${j.id}')"><i class="fas fa-archive"></i> No Vigente</button>`:`<button class="btn-primary" onclick="moveToVigente('${j.id}')"><i class="fas fa-undo"></i> Restaurar</button>`}<button class="btn-pdf" onclick="exportarPDF('${j.id}')"><i class="fas fa-file-pdf"></i> PDF</button><button class="btn-delete" onclick="requestDelete('${j.id}')"><i class="fas fa-trash"></i> Eliminar</button></div></div><div class="details-section"><h3>Información Principal</h3><div class="details-grid">${fields}</div></div>`;
+        }
+
+        function showNewForm() {
+            editingId = null; 
+            document.getElementById('jovenId').value = ''; // Limpiar el ID
+            document.getElementById('formTitle').textContent = 'Nuevo Registro'; 
+            document.getElementById('jovenForm').reset();
+            document.getElementById('nacionalidad').value = 'Chilena'; 
+            document.getElementById('formContainer').style.display = 'block';
+            document.getElementById('detailsContainer').style.display = 'none'; 
+            document.getElementById('welcomeScreen').style.display = 'none';
+            document.getElementById('statsDashboard').classList.remove('show');
+            document.querySelectorAll('.salud-fisica-field, .salud-mental-field, .drogas-field, .spe-field, .rpa-field, .estudio-field, .laboral-field, .proteccion-field').forEach(e => e.style.display = 'none');
+            ['catMenor1','catMayorIgual1','catMayorIgual2','catMayorIgual3'].forEach(b => { const el = document.getElementById(b); if (el) el.style.background = '#86868b'; });
+            actualizarSelectsTipoDelito();
+        }
+
+        function editJoven(id) {
+            const j = (currentView === 'vigentes' ? jovenesVigentes : jovenesNoVigentes).find(x => x.id === id); 
+            if (!j) return;
+            
+            editingId = id;
+            document.getElementById('jovenId').value = id; // Guardar el ID
+            document.getElementById('formTitle').textContent = 'Editar Registro';
+            
+            // Cargar todos los campos del formulario
+            const campos = ['nombre','rut','fechaNacimiento','edad','genero','nacionalidad','situacionEUE','edadIngreso','rangoEtario','pertenenciaEtnica','ruralidad','tipoJoven','fechaIngresoEUE','comuna','direccion','telefono','email','nombrePadre','nombreMadre','tieneHijos','adultoCargo','relacionAdulto','tipoFamilia','educacionAdulto','ocupacionAdulto','contactoAdulto','viveCon','obsFamiliares','prevSalud','tramoFONASA','problemaSaludFisica','especificarSaludFisica','problemaSaludMental','especificarSaludMental','tomaMedicamentos','medicamentos','discapacidad','fechaCrafft','consumoDrogas','tipoConsumo','tipoDroga','institucionTratamiento','tipoAdherencia','simultaneidadSPE','especificarSPE','simultaneidadRPA','especificarRPA','obsSalud','tribunalOrigen','tribunalEjecucion','fechaDerivacion','tipoDelito1','causalIngreso1','tipoDelito2','causalIngreso2','tipoDelito3','causalIngreso3','s1anios','s1meses','s1dias','s1abono','obsJudiciales','nivelEducacional','ultimoCurso','estudiaActualmente','tipoEstablecimiento','nombreInstitucion','cursoNivel','jornada','obsEducacionales','situacionLaboral','tipoContrato','tipoTrabajo','ocupacion','empleador','obsLaborales','enProgramaProteccion','tipoPrograma','nombrePrograma','fechaIngresoPrograma','obsProteccion','tieneRSH','tramoRSH','ingresoFamiliar','integrantesHogar','ingresoPerCapita','tuvoNecesidadUrgencia','tipoNecesidadUrgencia','fechaAprobacionPlan'];
+            
+            campos.forEach(campo => {
+                const elemento = document.getElementById(campo);
+                if (elemento && j[campo] !== undefined) {
+                    elemento.value = j[campo];
+                }
+            });
+            
+            // Mostrar campos condicionales
+            toggleField('salud-fisica-field', j.problemaSaludFisica);
+            toggleField('salud-mental-field', j.problemaSaludMental);
+            toggleField('drogas-field', j.consumoDrogas);
+            toggleField('spe-field', j.simultaneidadSPE);
+            toggleField('rpa-field', j.simultaneidadRPA);
+            toggleField('estudio-field', j.estudiaActualmente);
+            toggleLaboralFields();
+            toggleField('proteccion-field', j.enProgramaProteccion);
+            
+            // Abrir el formulario
+            document.getElementById('formContainer').style.display = 'block';
+            document.getElementById('detailsContainer').style.display = 'none';
+            document.getElementById('welcomeScreen').style.display = 'none';
+            document.getElementById('statsDashboard').classList.remove('show');
+
+            // Recalcular campos de sanción para que se muestren al abrir el formulario
+            calcularTiempoCumplido();
+        }
+
+        function closeForm() { document.getElementById('formContainer').style.display = 'none'; if (selectedJoven) showDetails(selectedJoven); else document.getElementById('welcomeScreen').style.display = 'block'; }
+
+        async function saveJoven(e) {
+            e.preventDefault(); 
+            
+            const j = { 
+                id: editingId || Date.now().toString() 
+            };
+            
+            const fields = ['nombre','rut','fechaNacimiento','edad','genero','nacionalidad','situacionEUE','edadIngreso','rangoEtario','pertenenciaEtnica','ruralidad','tipoJoven','fechaIngresoEUE','comuna','direccion','telefono','email','nombrePadre','nombreMadre','tieneHijos','adultoCargo','relacionAdulto','tipoFamilia','educacionAdulto','ocupacionAdulto','contactoAdulto','viveCon','obsFamiliares','prevSalud','tramoFONASA','problemaSaludFisica','especificarSaludFisica','problemaSaludMental','especificarSaludMental','tomaMedicamentos','medicamentos','discapacidad','fechaCrafft','consumoDrogas','tipoConsumo','tipoDroga','institucionTratamiento','tipoAdherencia','simultaneidadSPE','especificarSPE','simultaneidadRPA','especificarRPA','obsSalud','tribunalOrigen','tribunalEjecucion','fechaDerivacion','tipoDelito1','causalIngreso1','tipoDelito2','causalIngreso2','tipoDelito3','causalIngreso3','s1anios','s1meses','s1dias','s1abono','totalDiasSentencia','diasCumplidos','diasRestantes','fechaEgresoEstimada','obsJudiciales','nivelEducacional','ultimoCurso','estudiaActualmente','tipoEstablecimiento','nombreInstitucion','cursoNivel','jornada','obsEducacionales','situacionLaboral','tipoContrato','tipoTrabajo','ocupacion','empleador','obsLaborales','enProgramaProteccion','tipoPrograma','nombrePrograma','fechaIngresoPrograma','obsProteccion','tieneRSH','tramoRSH','ingresoFamiliar','integrantesHogar','ingresoPerCapita','tuvoNecesidadUrgencia','tipoNecesidadUrgencia','fechaAprobacionPlan'];
+            
+            fields.forEach(f => { 
+                const el = document.getElementById(f); 
+                if (el) j[f] = el.value; 
+            });
+            
+            j.categoriaSancion = getCategoriaSancionReal(j);
+            
+            // Recalcular siempre los campos de sanción desde los datos fuente antes de guardar
+            const sd = calcularDatosSancion(j);
+            j.totalDiasSentencia   = sd.totalDiasSentencia;
+            j.diasCumplidos        = sd.diasCumplidos;
+            j.diasRestantes        = sd.diasRestantes;
+            j.fechaEgresoEstimada  = sd.fechaEgresoEstimada;
+            
+            if (!editingId) {
+                j.fechaCreacion = new Date().toISOString();
+            }
+            j.fechaActualizacion = new Date().toISOString();
+            
+            if (currentView === 'vigentes') { 
+                if (editingId) { 
+                    const idx = jovenesVigentes.findIndex(x => x.id === editingId); 
+                    if (idx !== -1) jovenesVigentes[idx] = j; 
+                } else { 
+                    jovenesVigentes.push(j); 
+                }
+            } else { 
+                if (editingId) { 
+                    const idx = jovenesNoVigentes.findIndex(x => x.id === editingId); 
+                    if (idx !== -1) jovenesNoVigentes[idx] = j; 
+                } else {
+                    jovenesNoVigentes.push(j);
+                }
+            }
+            
+            // Guardar directamente en Firebase solo el registro modificado
+            try {
+                const col = currentView === 'vigentes' ? 'jovenesVigentes' : 'jovenesNoVigentes';
+                await db.collection(col).doc(j.id).set(j);
+                localStorage.setItem('jovenesVigentesLAE', JSON.stringify(jovenesVigentes));
+                localStorage.setItem('jovenesNoVigentesLAE', JSON.stringify(jovenesNoVigentes));
+            } catch(err) { console.error('Error guardando en Firebase:', err); }
+            closeForm(); 
+            selectedJoven = j; 
+            showDetails(j); 
+            renderList(); 
+            alert('✅ Registro guardado correctamente');
+        }
+
+        async function moveToNoVigente(id) {
+            if (confirm('¿Marcar como NO VIGENTE?')) {
+                const idx = jovenesVigentes.findIndex(j => j.id === id);
+                if (idx !== -1) { 
+                    const j = jovenesVigentes[idx]; 
+                    j.fechaNoVigente = new Date().toISOString(); 
+                    jovenesNoVigentes.push(j); 
+                    jovenesVigentes.splice(idx, 1); 
+                    // Guardar en colección destino y eliminar de colección origen en Firebase
+                    try {
+                        await db.collection('jovenesNoVigentes').doc(j.id).set(j);
+                        await db.collection('jovenesVigentes').doc(id).delete();
+                        localStorage.setItem('jovenesVigentesLAE', JSON.stringify(jovenesVigentes));
+                        localStorage.setItem('jovenesNoVigentesLAE', JSON.stringify(jovenesNoVigentes));
+                        console.log('✅ Joven movido a No Vigentes en Firebase');
+                    } catch (error) {
+                        console.error('❌ Error al mover a No Vigentes:', error);
+                    }
+                    selectedJoven = null; 
+                    document.getElementById('welcomeScreen').style.display = 'block'; 
+                    document.getElementById('detailsContainer').style.display = 'none'; 
+                    renderList(); 
+                }
+            }
+        }
+
+        async function moveToVigente(id) {
+            if (confirm('¿Restaurar como VIGENTE?')) {
+                const idx = jovenesNoVigentes.findIndex(j => j.id === id);
+                if (idx !== -1) { 
+                    const j = jovenesNoVigentes[idx]; 
+                    delete j.fechaNoVigente; 
+                    jovenesVigentes.push(j); 
+                    jovenesNoVigentes.splice(idx, 1); 
+                    // Guardar en colección destino y eliminar de colección origen en Firebase
+                    try {
+                        await db.collection('jovenesVigentes').doc(j.id).set(j);
+                        await db.collection('jovenesNoVigentes').doc(id).delete();
+                        localStorage.setItem('jovenesVigentesLAE', JSON.stringify(jovenesVigentes));
+                        localStorage.setItem('jovenesNoVigentesLAE', JSON.stringify(jovenesNoVigentes));
+                        console.log('✅ Joven restaurado a Vigentes en Firebase');
+                    } catch (error) {
+                        console.error('❌ Error al restaurar a Vigentes:', error);
+                    }
+                    selectedJoven = null; 
+                    document.getElementById('welcomeScreen').style.display = 'block'; 
+                    document.getElementById('detailsContainer').style.display = 'none'; 
+                    renderList(); 
+                }
+            }
+        }
+
+        function requestDelete(id) {
+            pendingAction = { type: 'delete', id };
+            document.getElementById('passwordModal').classList.add('show');
+            document.getElementById('passwordInput').value = '';
+        }
+
+        function closePasswordModal() { document.getElementById('passwordModal').classList.remove('show'); }
+
+        async function verifyPassword() {
+            if (document.getElementById('passwordInput').value === DELETE_PASSWORD) {
+                if (pendingAction?.type === 'delete') { 
+                    const id = pendingAction.id; 
+                    if (currentView === 'vigentes') { 
+                        const idx = jovenesVigentes.findIndex(j => j.id === id); 
+                        if (idx !== -1) { 
+                            jovenesVigentes.splice(idx, 1); 
+                            try { await db.collection('jovenesVigentes').doc(id).delete(); } catch(e) { console.error(e); }
+                            localStorage.setItem('jovenesVigentesLAE', JSON.stringify(jovenesVigentes));
+                        } 
+                    } else { 
+                        const idx = jovenesNoVigentes.findIndex(j => j.id === id); 
+                        if (idx !== -1) { 
+                            jovenesNoVigentes.splice(idx, 1); 
+                            try { await db.collection('jovenesNoVigentes').doc(id).delete(); } catch(e) { console.error(e); }
+                            localStorage.setItem('jovenesNoVigentesLAE', JSON.stringify(jovenesNoVigentes));
+                        } 
+                    } 
+                    selectedJoven = null; 
+                    document.getElementById('welcomeScreen').style.display = 'block'; 
+                    document.getElementById('detailsContainer').style.display = 'none'; 
+                    renderList(); 
+                }
+                closePasswordModal();
+            } else { alert('Contraseña incorrecta'); }
+        }
+
+        function toggleDashboard() {
+            const d = document.getElementById('statsDashboard'); d.classList.toggle('show');
+            document.getElementById('welcomeScreen').style.display = 'none'; 
+            document.getElementById('formContainer').style.display = 'none'; 
+            document.getElementById('detailsContainer').style.display = 'none';
+            if (d.classList.contains('show')) { actualizarDashboard(); renderSinContacto(); renderNecesidadesUrgencia(); renderInformesSeguimiento(); renderPlanesIntervencion(); renderCrafftPanel(); }
+        }
+
+
+
+
+
+
+        // ========== INFORMES DE SEGUIMIENTO ==========
+        function calcularInformesSeguimiento(fechaAprobacion, fechaIngresoEUE, s1anios, s1meses, s1dias) {
+            if (!fechaAprobacion) return [];
+            const inicio = new Date(fechaAprobacion + 'T12:00:00');
+            // Calcular fecha fin desde ingreso EUE + duración original de sentencia
+            let fechaFin;
+            if (fechaIngresoEUE && (s1anios || s1meses || s1dias)) {
+                fechaFin = new Date(fechaIngresoEUE + 'T12:00:00');
+                fechaFin.setFullYear(fechaFin.getFullYear() + (parseInt(s1anios)||0));
+                fechaFin.setMonth(fechaFin.getMonth() + (parseInt(s1meses)||0));
+                fechaFin.setDate(fechaFin.getDate() + (parseInt(s1dias)||0));
+            } else {
+                // Si no hay datos, máximo 4 años desde aprobación
+                fechaFin = new Date(inicio.getTime() + 1460 * 24 * 60 * 60 * 1000);
+            }
+            const informes = [];
+            let n = 1;
+            let fechaInforme = new Date(inicio);
+            while (true) {
+                // Sumar 3 meses exactos
+                fechaInforme = new Date(inicio);
+                fechaInforme.setMonth(fechaInforme.getMonth() + (n * 3));
+                if (fechaInforme > fechaFin) break;
+                informes.push({ numero: n, fecha: new Date(fechaInforme) });
+                n++;
+            }
+            return informes;
+        }
+
+        function renderInformesSeguimiento() {
+            const container = document.getElementById('informesSeguimientoList');
+            if (!container) return;
+
+            const hoy = new Date(); hoy.setHours(12,0,0,0);
+            const activos = [...jovenesVigentes].filter(j =>
+                j.situacionEUE === 'Vigente' || j.situacionEUE === 'Ingreso sin contacto'
+            );
+
+            const fmtFecha = d => {
+                if (!d) return '—';
+                return String(d.getDate()).padStart(2,'0') + '/' +
+                       String(d.getMonth()+1).padStart(2,'0') + '/' + d.getFullYear();
+            };
+
+            // Construir lista de próximos informes por joven
+            const filas = [];
+            const alertas = [];
+            const sinFecha = [];
+
+            activos.forEach(j => {
+                if (!j.fechaAprobacionPlan) { sinFecha.push(j); return; }
+                const informes = calcularInformesSeguimiento(j.fechaAprobacionPlan, j.fechaIngresoEUE, j.s1anios, j.s1meses, j.s1dias);
+                // Buscar el próximo informe pendiente (fecha >= hoy)
+                const proximos = informes.filter(inf => inf.fecha >= hoy);
+                const vencidos = informes.filter(inf => inf.fecha < hoy);
+                const proximo = proximos[0] || null;
+                const diasRestantes = proximo ? Math.round((proximo.fecha - hoy)/(1000*60*60*24)) : null;
+
+                filas.push({
+                    joven: j,
+                    informes,
+                    proximo,
+                    diasRestantes,
+                    totalInformes: informes.length,
+                    informesVencidos: vencidos.length
+                });
+
+                if (proximo && diasRestantes !== null && diasRestantes <= 3) {
+                    alertas.push({ joven: j, proximo, diasRestantes });
+                }
+            });
+
+            // Ordenar: primero los que tienen próximo informe más cercano
+            filas.sort((a, b) => {
+                if (!a.proximo && !b.proximo) return 0;
+                if (!a.proximo) return 1;
+                if (!b.proximo) return -1;
+                return a.proximo.fecha - b.proximo.fecha;
+            });
+
+            let html = '';
+
+            // Bloque de alertas
+            if (alertas.length > 0) {
+                html += `<div style="background:linear-gradient(135deg,#fff3cd,#ffe8a3); border-left:4px solid #ff9f0a; border-radius:10px; padding:14px 18px; margin-bottom:18px; display:flex; align-items:flex-start; gap:12px;">
+                    <i class="fas fa-bell" style="color:#ff9f0a; font-size:20px; margin-top:2px;"></i>
+                    <div>
+                        <p style="margin:0 0 6px; font-weight:700; color:#7d4e00; font-size:14px;">⚠️ ALERTAS — Informes de seguimiento próximos a vencer</p>`;
+                alertas.forEach(a => {
+                    html += `<p style="margin:2px 0; font-size:13px; color:#7d4e00;">• <b>${a.joven.nombre}</b> — Informe N°${a.proximo.numero} vence el <b>${fmtFecha(a.proximo.fecha)}</b> ${a.diasRestantes === 0 ? '(HOY)' : '(en ' + a.diasRestantes + ' día' + (a.diasRestantes !== 1 ? 's' : '') + ')'}</p>`;
+                });
+                html += `</div></div>`;
+            }
+
+            // Tabla principal
+            html += `<div style="overflow-x:auto;"><table style="width:100%; border-collapse:collapse; font-size:13px; min-width:750px;">
+                <thead><tr style="background:#1A4A8A; color:white;">
+                    <th style="padding:10px 12px; text-align:left; border-radius:8px 0 0 0;">Nombre</th>
+                    <th style="padding:10px 12px; text-align:center;">Aprobación Plan</th>
+                    <th style="padding:10px 12px; text-align:center;">Total Informes</th>
+                    <th style="padding:10px 12px; text-align:center;">Próximo Informe</th>
+                    <th style="padding:10px 12px; text-align:center;">N° Informe</th>
+                    <th style="padding:10px 12px; text-align:center; border-radius:0 8px 0 0;">Estado</th>
+                </tr></thead><tbody>`;
+
+            filas.forEach((f, i) => {
+                const bg = i % 2 === 0 ? '#ffffff' : '#f5f5f7';
+                const [yA, mA, dA] = (f.joven.fechaAprobacionPlan||'').split('-');
+                const aprobStr = f.joven.fechaAprobacionPlan ? `${dA}/${mA}/${yA}` : '—';
+
+                let estadoBadge = '';
+                let proxFechaStr = '—';
+
+                if (!f.proximo) {
+                    estadoBadge = `<span style="background:#888;color:white;border-radius:6px;padding:3px 8px;font-size:11px;font-weight:600;">Completado</span>`;
+                    proxFechaStr = 'Todos entregados';
+                } else {
+                    proxFechaStr = fmtFecha(f.proximo.fecha);
+                    if (f.diasRestantes < 0) {
+                        estadoBadge = `<span style="background:#ff3b30;color:white;border-radius:6px;padding:3px 8px;font-size:11px;font-weight:600;">⛔ Vencido</span>`;
+                    } else if (f.diasRestantes <= 3) {
+                        estadoBadge = `<span style="background:#ff9f0a;color:white;border-radius:6px;padding:3px 8px;font-size:11px;font-weight:600;">⚠️ ${f.diasRestantes}d</span>`;
+                    } else {
+                        estadoBadge = `<span style="background:#28cd41;color:white;border-radius:6px;padding:3px 8px;font-size:11px;font-weight:600;">${f.diasRestantes}d</span>`;
+                    }
+                }
+
+                html += `<tr style="background:${bg}; cursor:pointer;" onclick="mostrarDetalleInformes('${f.joven.id}')">
+                    <td style="padding:9px 12px; font-weight:600; color:#1d1d1f;">${f.joven.nombre}</td>
+                    <td style="padding:9px 12px; text-align:center; color:#555;">${aprobStr}</td>
+                    <td style="padding:9px 12px; text-align:center; font-weight:600; color:#1A4A8A;">${f.totalInformes}</td>
+                    <td style="padding:9px 12px; text-align:center; font-weight:600; color:#1A4A8A;">${proxFechaStr}</td>
+                    <td style="padding:9px 12px; text-align:center; color:#555;">${f.proximo ? 'N°' + f.proximo.numero + ' de ' + f.totalInformes : '—'}</td>
+                    <td style="padding:9px 12px; text-align:center;">${estadoBadge}</td>
+                </tr>`;
+            });
+
+            if (sinFecha.length > 0) {
+                html += `<tr style="background:#fff5f5; cursor:pointer;" onclick="mostrarSinAprobacion()">
+                    <td colspan="6" style="padding:10px 12px; color:#ff3b30; font-weight:600; text-align:center;">
+                        <i class="fas fa-exclamation-circle"></i> ${sinFecha.length} joven(es) sin fecha de aprobación del plan — Clic para ver quiénes son
+                    </td>
+                </tr>`;
+            }
+
+            html += '</tbody></table></div>';
+            container.innerHTML = html;
+        }
+
+        function mostrarDetalleInformes(id) {
+            const j = jovenesVigentes.find(x => x.id === id);
+            if (!j || !j.fechaAprobacionPlan) return;
+            const hoy = new Date(); hoy.setHours(12,0,0,0);
+            const informes = calcularInformesSeguimiento(j.fechaAprobacionPlan, j.fechaIngresoEUE, j.s1anios, j.s1meses, j.s1dias);
+            const [yA,mA,dA] = j.fechaAprobacionPlan.split('-');
+            const fmtFecha = d => String(d.getDate()).padStart(2,'0')+'/'+String(d.getMonth()+1).padStart(2,'0')+'/'+d.getFullYear();
+
+            document.getElementById('modalCrafftTitle').textContent = j.nombre + ' — Informes de Seguimiento';
+            let html = `<div style="background:#f5f5f7; border-radius:10px; padding:12px; margin-bottom:14px; display:flex; justify-content:space-between;">
+                <div><p style="margin:0 0 2px; font-size:12px; color:#888;">Aprobación Plan Inicial</p>
+                <p style="margin:0; font-weight:700; color:#1A4A8A; font-size:16px;">${dA}/${mA}/${yA}</p></div>
+                <div style="text-align:right;"><p style="margin:0 0 2px; font-size:12px; color:#888;">Total informes en sentencia</p>
+                <p style="margin:0; font-weight:700; color:#1A4A8A; font-size:16px;">${informes.length} informes</p></div>
+            </div>
+            <div style="max-height:350px; overflow-y:auto;">`;
+
+            informes.forEach(inf => {
+                const dias = Math.round((inf.fecha - hoy)/(1000*60*60*24));
+                const vencido = dias < 0;
+                const alerta = !vencido && dias <= 3;
+                const ok = !vencido && !alerta;
+                const color = vencido ? '#ff3b30' : alerta ? '#ff9f0a' : '#28cd41';
+                const bg = vencido ? '#fff0f0' : alerta ? '#fff8e6' : '#f0fff4';
+                const label = vencido ? '⛔ Vencido hace ' + Math.abs(dias) + 'd' : dias === 0 ? '🔴 HOY' : '📅 Faltan ' + dias + 'd';
+
+                html += `<div style="display:flex; align-items:center; justify-content:space-between; background:${bg}; border-left:4px solid ${color}; border-radius:8px; padding:10px 14px; margin-bottom:8px;">
+                    <div style="display:flex; align-items:center; gap:12px;">
+                        <span style="background:${color}; color:white; border-radius:50%; width:28px; height:28px; display:flex; align-items:center; justify-content:center; font-size:12px; font-weight:700; flex-shrink:0;">${inf.numero}</span>
+                        <div>
+                            <p style="margin:0; font-weight:700; color:#1d1d1f;">Informe N°${inf.numero}</p>
+                            <p style="margin:0; font-size:12px; color:#888;">Fecha límite: ${fmtFecha(inf.fecha)}</p>
+                        </div>
+                    </div>
+                    <span style="font-size:12px; font-weight:600; color:${color};">${label}</span>
+                </div>`;
+            });
+
+            html += '</div>';
+            document.getElementById('modalCrafftContent').innerHTML = html;
+            document.getElementById('modalCrafft').style.display = 'flex';
+        }
+
+        function mostrarSinAprobacion() {
+            const sinFecha = jovenesVigentes.filter(j =>
+                !j.fechaAprobacionPlan &&
+                (j.situacionEUE === 'Vigente' || j.situacionEUE === 'Ingreso sin contacto')
+            );
+            document.getElementById('modalCrafftTitle').textContent = 'Sin fecha de aprobación del Plan Inicial';
+            let html = `<p style="color:#888; margin-bottom:12px;">${sinFecha.length} jóvenes sin fecha registrada:</p>`;
+            sinFecha.forEach((j, i) => {
+                html += `<div style="display:flex; align-items:center; gap:10px; padding:10px 14px; background:${i%2===0?'#f5f5f7':'#fff'}; border-radius:8px; margin-bottom:6px;">
+                    <span style="background:#ff3b30; color:white; border-radius:50%; width:28px; height:28px; display:flex; align-items:center; justify-content:center; font-size:12px; font-weight:600; flex-shrink:0;">${i+1}</span>
+                    <div><p style="margin:0; font-weight:600; color:#1d1d1f;">${j.nombre}</p>
+                    <p style="margin:0; font-size:12px; color:#888;">${j.rut||''} — ${j.situacionEUE||''}</p></div>
+                </div>`;
+            });
+            document.getElementById('modalCrafftContent').innerHTML = html;
+            document.getElementById('modalCrafft').style.display = 'flex';
+        }
+
+        // ========== INGRESO SIN CONTACTO ==========
+        function renderSinContacto() {
+            const container = document.getElementById('sinContactoList');
+            if (!container) return;
+            const lista = [...jovenesVigentes]
+                .filter(j => j.situacionEUE === 'Ingreso sin contacto')
+                .sort((a,b) => {
+                    if (!a.fechaIngresoEUE) return 1;
+                    if (!b.fechaIngresoEUE) return -1;
+                    return new Date(b.fechaIngresoEUE) - new Date(a.fechaIngresoEUE);
+                });
+
+            if (lista.length === 0) {
+                container.innerHTML = '<p style="text-align:center; color:#888; padding:20px;">No hay jóvenes con ingreso sin contacto.</p>';
+                return;
+            }
+
+            const hoy = new Date(); hoy.setHours(12,0,0,0);
+            let html = `<p style="font-size:13px; color:#555; margin-bottom:12px;"><b>${lista.length}</b> joven(es) con ingreso sin contacto:</p>`;
+            html += `<div style="overflow-x:auto;"><table style="width:100%; border-collapse:collapse; font-size:13px;">
+                <thead><tr style="background:#e67e22; color:white;">
+                    <th style="padding:10px 14px; text-align:left; border-radius:8px 0 0 0;">N°</th>
+                    <th style="padding:10px 14px; text-align:left;">Nombre</th>
+                    <th style="padding:10px 14px; text-align:left;">RUT</th>
+                    <th style="padding:10px 14px; text-align:left;">Comuna</th>
+                    <th style="padding:10px 14px; text-align:left;">Fecha Ingreso EUE</th>
+                    <th style="padding:10px 14px; text-align:left; border-radius:0 8px 0 0;">Días sin contacto</th>
+                </tr></thead><tbody>`;
+
+            lista.forEach((j, i) => {
+                const bg = i % 2 === 0 ? '#ffffff' : '#fff8f0';
+                const ingreso = j.fechaIngresoEUE ? new Date(j.fechaIngresoEUE + 'T12:00:00') : null;
+                const dias = ingreso ? Math.round((hoy - ingreso)/(1000*60*60*24)) : null;
+                const [y,m,d] = (j.fechaIngresoEUE||'').split('-');
+                const fechaStr = j.fechaIngresoEUE ? `${d}/${m}/${y}` : '—';
+                const diasColor = dias === null ? '#888' : dias > 30 ? '#ff3b30' : dias > 15 ? '#ff9f0a' : '#28cd41';
+                html += `<tr style="background:${bg};">
+                    <td style="padding:9px 14px; color:#888;">${i+1}</td>
+                    <td style="padding:9px 14px; font-weight:600; color:#1d1d1f;">${j.nombre}</td>
+                    <td style="padding:9px 14px; color:#555;">${j.rut||'—'}</td>
+                    <td style="padding:9px 14px; color:#555;">${j.comuna||'—'}</td>
+                    <td style="padding:9px 14px; color:#555;">${fechaStr}</td>
+                    <td style="padding:9px 14px; font-weight:700; color:${diasColor};">${dias !== null ? dias + ' días' : '—'}</td>
+                </tr>`;
+            });
+
+            html += '</tbody></table></div>';
+            container.innerHTML = html;
+        }
+
+        // ========== NECESIDAD DE URGENCIA ==========
+        function toggleUrgenciaTipo(val) {
+            const f = document.getElementById('urgenciaTipoField');
+            if (f) f.style.display = val === 'Sí' ? 'flex' : 'none';
+        }
+
+        function renderNecesidadesUrgencia() {
+            const container = document.getElementById('necesidadesUrgenciaList');
+            if (!container) return;
+            const conNecesidad = [...jovenesVigentes].filter(j =>
+                j.tuvoNecesidadUrgencia === 'Sí'
+            ).sort((a,b) => {
+                if (!a.fechaIngresoEUE) return 1;
+                if (!b.fechaIngresoEUE) return -1;
+                return new Date(b.fechaIngresoEUE) - new Date(a.fechaIngresoEUE);
+            });
+
+            if (conNecesidad.length === 0) {
+                container.innerHTML = '<p style="text-align:center; color:#888; padding:20px;">Ningún joven registra necesidad de urgencia al ingreso.</p>';
+                return;
+            }
+
+            let html = `<p style="font-size:13px; color:#555; margin-bottom:12px;">Se encontraron <b>${conNecesidad.length}</b> joven(es) con necesidad de urgencia al ingreso:</p>`;
+            html += `<div style="overflow-x:auto;"><table style="width:100%; border-collapse:collapse; font-size:13px;">
+                <thead><tr style="background:#c0392b; color:white;">
+                    <th style="padding:10px 14px; text-align:left; border-radius:8px 0 0 0;">N°</th>
+                    <th style="padding:10px 14px; text-align:left;">Nombre</th>
+                    <th style="padding:10px 14px; text-align:left;">RUT</th>
+                    <th style="padding:10px 14px; text-align:left;">Tipo de Necesidad</th>
+                    <th style="padding:10px 14px; text-align:left; border-radius:0 8px 0 0;">Situación EUE</th>
+                </tr></thead><tbody>`;
+
+            const colorTipo = {
+                'Salud Mental': '#667eea',
+                'Salud Física': '#28cd41',
+                'Protección Especializada': '#ff9f0a'
+            };
+
+            conNecesidad.forEach((j, i) => {
+                const bg = i % 2 === 0 ? '#ffffff' : '#f5f5f7';
+                const tipo = j.tipoNecesidadUrgencia || '—';
+                html += `<tr style="background:${bg};">
+                    <td style="padding:9px 14px; color:#888;">${i+1}</td>
+                    <td style="padding:9px 14px; font-weight:600; color:#1d1d1f;">${j.nombre}</td>
+                    <td style="padding:9px 14px; color:#555;">${j.rut||'—'}</td>
+                    <td style="padding:9px 14px;">
+                        <span style="background:${colorTipo[tipo]||'#888'}; color:white; border-radius:8px; padding:3px 10px; font-size:12px; font-weight:600;">${tipo}</span>
+                    </td>
+                    <td style="padding:9px 14px; color:#555;">${j.situacionEUE||'—'}</td>
+                </tr>`;
+            });
+
+            html += '</tbody></table></div>';
+            container.innerHTML = html;
+        }
+
+
+        // ========== PLANES DE INTERVENCIÓN ==========
+        // Feriados bancarios Chile 2024-2027 (sábados siempre son inhábiles bancarios)
+        const FERIADOS_CL = new Set([
+            // 2024
+            '2024-01-01','2024-03-29','2024-03-30','2024-05-01','2024-05-21',
+            '2024-06-20','2024-06-29','2024-07-16','2024-08-15','2024-09-18',
+            '2024-09-19','2024-09-20','2024-10-12','2024-10-31','2024-11-01',
+            '2024-11-17','2024-12-08','2024-12-25','2024-12-31',
+            // 2025
+            '2025-01-01','2025-04-18','2025-04-19','2025-05-01','2025-05-21',
+            '2025-06-20','2025-06-29','2025-07-16','2025-08-15','2025-09-18',
+            '2025-09-19','2025-10-12','2025-10-31','2025-11-01','2025-11-16',
+            '2025-12-08','2025-12-25','2025-12-31',
+            // 2026
+            '2026-01-01','2026-04-03','2026-04-04','2026-05-01','2026-05-21',
+            '2026-06-21','2026-06-29','2026-07-16','2026-08-15','2026-09-18',
+            '2026-09-19','2026-10-12','2026-10-31','2026-11-01','2026-12-08',
+            '2026-12-25','2026-12-31',
+            // 2027
+            '2027-01-01','2027-03-26','2027-03-27','2027-05-01','2027-05-21',
+            '2027-06-21','2027-06-28','2027-07-16','2027-08-15','2027-09-18',
+            '2027-09-19','2027-10-12','2027-11-01','2027-12-08','2027-12-25','2027-12-31'
+        ]);
+
+        function esDiaHabilBancario(fecha) {
+            const d = new Date(fecha);
+            const dow = d.getDay(); // 0=dom, 6=sab
+            if (dow === 0 || dow === 6) return false;
+            const key = d.toISOString().slice(0, 10);
+            return !FERIADOS_CL.has(key);
+        }
+
+        function sumarDiasBancarios(fechaStr, dias) {
+            // Suma N días bancarios (hábiles bancarios) a partir de fechaStr (YYYY-MM-DD)
+            // El día 1 es el primer día hábil DESPUÉS de la fecha de ingreso
+            let d = new Date(fechaStr + 'T12:00:00');
+            let contador = 0;
+            while (contador < dias) {
+                d.setDate(d.getDate() + 1);
+                if (esDiaHabilBancario(d)) contador++;
+            }
+            return d;
+        }
+
+        function calcularFechasPlan(fechaIngreso) {
+            if (!fechaIngreso) return null;
+            const inicial = sumarDiasBancarios(fechaIngreso, 15);
+            const profundizado = sumarDiasBancarios(fechaIngreso, 45);
+            return { inicial, profundizado };
+        }
+
+        function diasHabilesRestantes(fechaLimite) {
+            const hoy = new Date();
+            hoy.setHours(12, 0, 0, 0);
+            const limite = new Date(fechaLimite);
+            limite.setHours(12, 0, 0, 0);
+            const diff = Math.round((limite - hoy) / (1000 * 60 * 60 * 24));
+            return diff; // días calendarios restantes (para mostrar)
+        }
+
+        function formatFecha(d) {
+            if (!d) return '—';
+            const dia = String(d.getDate()).padStart(2, '0');
+            const mes = String(d.getMonth() + 1).padStart(2, '0');
+            const anio = d.getFullYear();
+            const dias = ['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'];
+            return `${dias[d.getDay()]} ${dia}/${mes}/${anio}`;
+        }
+
+        function renderPlanesIntervencion() {
+            const container = document.getElementById('planesIntervencionList');
+            if (!container) return;
+
+            const activos = [...jovenesVigentes].filter(j =>
+                j.situacionEUE === 'Vigente' || j.situacionEUE === 'Ingreso sin contacto'
+            );
+
+            const hoy = new Date(); hoy.setHours(12,0,0,0);
+
+            // Calcular datos de cada joven
+            const jovenes = activos.map(j => {
+                const fechas = calcularFechasPlan(j.fechaIngresoEUE);
+                if (!fechas) return { ...j, sinFecha: true };
+                const diasInic = Math.round((fechas.inicial - hoy) / (1000*60*60*24));
+                const diasProf = Math.round((fechas.profundizado - hoy) / (1000*60*60*24));
+                return { ...j, fechas, diasInic, diasProf, sinFecha: false };
+            }).filter(j => !j.sinFecha);
+
+            // Separar alertas (≤3 días) y vencidos
+            const alertasInic = jovenes.filter(j => j.diasInic >= 0 && j.diasInic <= 3);
+            const alertasProf = jovenes.filter(j => j.diasProf >= 0 && j.diasProf <= 3);
+            const vencidosInic = jovenes.filter(j => j.diasInic < 0);
+            const vencidosProf = jovenes.filter(j => j.diasProf < 0 && j.diasInic < 0);
+
+            // Ordenar todos por fecha inicial
+            jovenes.sort((a, b) => b.fechas.inicial - a.fechas.inicial);
+
+            let alertaHTML = '';
+            if (alertasInic.length > 0 || alertasProf.length > 0) {
+                alertaHTML = `<div style="background:linear-gradient(135deg,#fff3cd,#ffe8a3); border-left:4px solid #ff9f0a; border-radius:10px; padding:14px 18px; margin-bottom:18px; display:flex; align-items:flex-start; gap:12px;">
+                    <i class="fas fa-exclamation-triangle" style="color:#ff9f0a; font-size:20px; margin-top:2px;"></i>
+                    <div>
+                        <p style="margin:0 0 4px; font-weight:700; color:#7d4e00; font-size:14px;">⚠️ ALERTAS — Planes próximos a vencer (dentro de 3 días hábiles)</p>`;
+                alertasInic.forEach(j => {
+                    alertaHTML += `<p style="margin:2px 0; font-size:13px; color:#7d4e00;">• <b>${j.nombre}</b> — Plan Inicial vence el <b>${formatFecha(j.fechas.inicial)}</b> (en ${j.diasInic} día${j.diasInic!==1?'s':''})</p>`;
+                });
+                alertasProf.forEach(j => {
+                    if (!alertasInic.find(x => x.id === j.id)) {
+                        alertaHTML += `<p style="margin:2px 0; font-size:13px; color:#7d4e00;">• <b>${j.nombre}</b> — Plan Profundizado vence el <b>${formatFecha(j.fechas.profundizado)}</b> (en ${j.diasProf} día${j.diasProf!==1?'s':''})</p>`;
+                    }
+                });
+                alertaHTML += `</div></div>`;
+            }
+
+            let tablaHTML = `<div style="overflow-x:auto;">
+            <table style="width:100%; border-collapse:collapse; font-size:13px; min-width:700px;">
+                <thead>
+                    <tr style="background:#1A4A8A; color:white;">
+                        <th style="padding:10px 12px; text-align:left; border-radius:8px 0 0 0;">Nombre</th>
+                        <th style="padding:10px 12px; text-align:left;">Ingreso EUE</th>
+                        <th style="padding:10px 12px; text-align:center;">Plan Inicial (día 15)</th>
+                        <th style="padding:10px 12px; text-align:center;">Estado Inicial</th>
+                        <th style="padding:10px 12px; text-align:center;">Plan Profundizado (día 45)</th>
+                        <th style="padding:10px 12px; text-align:center; border-radius:0 8px 0 0;">Estado Profundizado</th>
+                    </tr>
+                </thead>
+                <tbody>`;
+
+            jovenes.forEach((j, i) => {
+                const bg = i % 2 === 0 ? '#ffffff' : '#f5f5f7';
+
+                const badgeInic = j.diasInic < 0
+                    ? `<span style="background:#ff3b30;color:white;border-radius:6px;padding:3px 8px;font-size:11px;font-weight:600;">Vencido</span>`
+                    : j.diasInic <= 3
+                    ? `<span style="background:#ff9f0a;color:white;border-radius:6px;padding:3px 8px;font-size:11px;font-weight:600;">⚠️ ${j.diasInic}d</span>`
+                    : `<span style="background:#28cd41;color:white;border-radius:6px;padding:3px 8px;font-size:11px;font-weight:600;">${j.diasInic}d</span>`;
+
+                const badgeProf = j.diasProf < 0
+                    ? `<span style="background:#ff3b30;color:white;border-radius:6px;padding:3px 8px;font-size:11px;font-weight:600;">Vencido</span>`
+                    : j.diasProf <= 3
+                    ? `<span style="background:#ff9f0a;color:white;border-radius:6px;padding:3px 8px;font-size:11px;font-weight:600;">⚠️ ${j.diasProf}d</span>`
+                    : `<span style="background:#28cd41;color:white;border-radius:6px;padding:3px 8px;font-size:11px;font-weight:600;">${j.diasProf}d</span>`;
+
+                const [y,m,d2] = (j.fechaIngresoEUE||'').split('-');
+                const ingresoStr = j.fechaIngresoEUE ? `${d2}/${m}/${y}` : '—';
+
+                tablaHTML += `<tr style="background:${bg}; cursor:pointer;" onclick="mostrarDetallePlan('${j.id}')">
+                    <td style="padding:9px 12px; font-weight:600; color:#1d1d1f;">${j.nombre}</td>
+                    <td style="padding:9px 12px; color:#555;">${ingresoStr}</td>
+                    <td style="padding:9px 12px; text-align:center; color:#1A4A8A; font-weight:600;">${formatFecha(j.fechas.inicial)}</td>
+                    <td style="padding:9px 12px; text-align:center;">${badgeInic}</td>
+                    <td style="padding:9px 12px; text-align:center; color:#1A4A8A; font-weight:600;">${formatFecha(j.fechas.profundizado)}</td>
+                    <td style="padding:9px 12px; text-align:center;">${badgeProf}</td>
+                </tr>`;
+            });
+
+            const sinFechaList = activos.filter(j => !j.fechaIngresoEUE);
+            if (sinFechaList.length > 0) {
+                tablaHTML += `<tr style="background:#fff5f5;">
+                    <td colspan="6" style="padding:10px 12px; color:#ff3b30; font-weight:600; text-align:center; cursor:pointer;" onclick="mostrarSinFechaIngreso()">
+                        <i class="fas fa-exclamation-circle"></i>  ${sinFechaList.length} joven(es) sin fecha de ingreso EUE registrada — Clic para ver quiénes son
+                    </td>
+                </tr>`;
+            }
+
+            tablaHTML += `</tbody></table></div>`;
+
+            container.innerHTML = alertaHTML + tablaHTML;
+        }
+
+        function mostrarDetallePlan(id) {
+            const j = jovenesVigentes.find(x => x.id === id);
+            if (!j) return;
+            const fechas = calcularFechasPlan(j.fechaIngresoEUE);
+            if (!fechas) return;
+            const hoy = new Date(); hoy.setHours(12,0,0,0);
+            const diasInic = Math.round((fechas.inicial - hoy)/(1000*60*60*24));
+            const diasProf = Math.round((fechas.profundizado - hoy)/(1000*60*60*24));
+            const [y,m,d] = (j.fechaIngresoEUE||'').split('-');
+
+            document.getElementById('modalCrafftTitle').textContent = j.nombre + ' — Planes de Intervención';
+            document.getElementById('modalCrafftContent').innerHTML = `
+                <div style="background:#f5f5f7; border-radius:10px; padding:14px; margin-bottom:12px;">
+                    <p style="margin:0 0 4px; font-size:12px; color:#888;">Fecha Ingreso EUE</p>
+                    <p style="margin:0; font-weight:700; font-size:18px; color:#1A4A8A;">${d}/${m}/${y}</p>
+                </div>
+                <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:12px;">
+                    <div style="background:${diasInic<0?'#fff0f0':diasInic<=3?'#fff8e6':'#f0fff4'}; border-radius:10px; padding:14px; border-left:4px solid ${diasInic<0?'#ff3b30':diasInic<=3?'#ff9f0a':'#28cd41'};">
+                        <p style="margin:0 0 4px; font-size:12px; color:#888;">Plan Inicial (día 15)</p>
+                        <p style="margin:0 0 6px; font-weight:700; font-size:16px; color:#1A4A8A;">${formatFecha(fechas.inicial)}</p>
+                        <p style="margin:0; font-size:13px; font-weight:600; color:${diasInic<0?'#ff3b30':diasInic<=3?'#ff9f0a':'#28cd41'};">
+                            ${diasInic < 0 ? '⛔ Vencido hace ' + Math.abs(diasInic) + ' días' : diasInic === 0 ? '🔴 Vence HOY' : '📅 Faltan ' + diasInic + ' días'}
+                        </p>
+                    </div>
+                    <div style="background:${diasProf<0?'#fff0f0':diasProf<=3?'#fff8e6':'#f0fff4'}; border-radius:10px; padding:14px; border-left:4px solid ${diasProf<0?'#ff3b30':diasProf<=3?'#ff9f0a':'#28cd41'};">
+                        <p style="margin:0 0 4px; font-size:12px; color:#888;">Plan Profundizado (día 45)</p>
+                        <p style="margin:0 0 6px; font-weight:700; font-size:16px; color:#1A4A8A;">${formatFecha(fechas.profundizado)}</p>
+                        <p style="margin:0; font-size:13px; font-weight:600; color:${diasProf<0?'#ff3b30':diasProf<=3?'#ff9f0a':'#28cd41'};">
+                            ${diasProf < 0 ? '⛔ Vencido hace ' + Math.abs(diasProf) + ' días' : diasProf === 0 ? '🔴 Vence HOY' : '📅 Faltan ' + diasProf + ' días'}
+                        </p>
+                    </div>
+                </div>
+                <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
+                    <div style="background:#f5f5f7; border-radius:10px; padding:12px;">
+                        <p style="margin:0 0 4px; font-size:12px; color:#888;">RUT</p>
+                        <p style="margin:0; font-weight:500;">${j.rut||'—'}</p>
+                    </div>
+                    <div style="background:#f5f5f7; border-radius:10px; padding:12px;">
+                        <p style="margin:0 0 4px; font-size:12px; color:#888;">Situación EUE</p>
+                        <p style="margin:0; font-weight:500;">${j.situacionEUE||'—'}</p>
+                    </div>
+                </div>`;
+            document.getElementById('modalCrafft').style.display = 'flex';
+        }
+
+        function mostrarSinFechaIngreso() {
+            const sinFecha = jovenesVigentes.filter(j => !j.fechaIngresoEUE && (j.situacionEUE === 'Vigente' || j.situacionEUE === 'Ingreso sin contacto'));
+            document.getElementById('modalCrafftTitle').textContent = 'Sin fecha de ingreso EUE';
+            let html = `<p style="color:#888; margin-bottom:12px;">${sinFecha.length} jóvenes sin fecha de ingreso registrada:</p>`;
+            sinFecha.forEach((j, i) => {
+                html += `<div style="display:flex;align-items:center;gap:10px;padding:10px 14px;background:${i%2===0?'#f5f5f7':'#fff'};border-radius:8px;margin-bottom:6px;">
+                    <span style="background:#ff3b30;color:white;border-radius:50%;width:28px;height:28px;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;flex-shrink:0;">${i+1}</span>
+                    <div><p style="margin:0;font-weight:600;color:#1d1d1f;">${j.nombre}</p><p style="margin:0;font-size:12px;color:#888;">${j.rut||''}</p></div>
+                </div>`;
+            });
+            document.getElementById('modalCrafftContent').innerHTML = html;
+            document.getElementById('modalCrafft').style.display = 'flex';
+        }
+
+        // ========== CRAFFT/ASSIST PANEL ==========
+        function renderCrafftPanel() {
+            const todos = [...jovenesVigentes];
+            const conFecha = todos.filter(j => j.fechaCrafft).sort((a, b) => new Date(b.fechaCrafft) - new Date(a.fechaCrafft));
+            const sinFecha = todos.filter(j => !j.fechaCrafft);
+
+            const container = document.getElementById('crafftList');
+            if (!container) return;
+
+            const formatDate = d => {
+                if (!d) return '';
+                const [y, m, dia] = d.split('-');
+                return dia + '/' + m + '/' + y;
+            };
+
+            let html = '<table style="width:100%; border-collapse:collapse; font-size:14px;">';
+            html += '<thead><tr style="background:#1A4A8A; color:white;">';
+            html += '<th style="padding:10px 14px; text-align:left; border-radius:8px 0 0 0;">N°</th>';
+            html += '<th style="padding:10px 14px; text-align:left;">Nombre</th>';
+            html += '<th style="padding:10px 14px; text-align:left;">Fecha CRAFFT/ASSIST</th>';
+            html += '<th style="padding:10px 14px; text-align:left; border-radius:0 8px 0 0;">Estado</th>';
+            html += '</tr></thead><tbody>';
+
+            conFecha.forEach((j, i) => {
+                const bg = i % 2 === 0 ? '#ffffff' : '#f5f5f7';
+                html += `<tr style="background:${bg}; cursor:pointer;" onclick="mostrarCrafftDetalle('${j.id}', '${j.nombre}', '${j.fechaCrafft}', true)">`;
+                html += `<td style="padding:9px 14px; color:#888;">${i + 1}</td>`;
+                html += `<td style="padding:9px 14px; font-weight:500; color:#1d1d1f;">${j.nombre}</td>`;
+                html += `<td style="padding:9px 14px; color:#1A4A8A; font-weight:600;">${formatDate(j.fechaCrafft)}</td>`;
+                html += `<td style="padding:9px 14px;"><span style="background:#28cd41; color:white; border-radius:8px; padding:3px 10px; font-size:12px; font-weight:600;">✓ Realizado</span></td>`;
+                html += '</tr>';
+            });
+
+            if (sinFecha.length > 0) {
+                html += `<tr style="background:#fff3f3; cursor:pointer;" onclick="mostrarCrafftSinFecha()">`;
+                html += `<td colspan="4" style="padding:10px 14px; color:#ff3b30; font-weight:600; text-align:center;">`;
+                html += `<i class="fas fa-exclamation-circle"></i>  ${sinFecha.length} joven(es) sin fecha CRAFFT/ASSIST — Clic para ver quiénes son</td>`;
+                html += '</tr>';
+            }
+
+            html += '</tbody></table>';
+            container.innerHTML = html;
+        }
+
+        function mostrarCrafftDetalle(id, nombre, fecha, tieneInstrumento) {
+            const j = jovenesVigentes.find(x => x.id === id);
+            if (!j) return;
+            const formatDate = d => { if (!d) return ''; const [y,m,dia] = d.split('-'); return dia+'/'+m+'/'+y; };
+            document.getElementById('modalCrafftTitle').textContent = nombre;
+            document.getElementById('modalCrafftContent').innerHTML = `
+                <div style="background:#f5f5f7; border-radius:10px; padding:16px; margin-bottom:12px;">
+                    <p style="margin:0 0 6px 0; font-size:13px; color:#888;">Fecha CRAFFT/ASSIST</p>
+                    <p style="margin:0; font-size:22px; font-weight:700; color:#1A4A8A;">${formatDate(fecha)}</p>
+                </div>
+                <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
+                    <div style="background:#f5f5f7; border-radius:10px; padding:12px;">
+                        <p style="margin:0 0 4px 0; font-size:12px; color:#888;">RUT</p>
+                        <p style="margin:0; font-weight:500;">${j.rut||'—'}</p>
+                    </div>
+                    <div style="background:#f5f5f7; border-radius:10px; padding:12px;">
+                        <p style="margin:0 0 4px 0; font-size:12px; color:#888;">Comuna</p>
+                        <p style="margin:0; font-weight:500;">${j.comuna||'—'}</p>
+                    </div>
+                    <div style="background:#f5f5f7; border-radius:10px; padding:12px;">
+                        <p style="margin:0 0 4px 0; font-size:12px; color:#888;">Situación</p>
+                        <p style="margin:0; font-weight:500;">${j.situacionEUE||'—'}</p>
+                    </div>
+                    <div style="background:#f5f5f7; border-radius:10px; padding:12px;">
+                        <p style="margin:0 0 4px 0; font-size:12px; color:#888;">Edad</p>
+                        <p style="margin:0; font-weight:500;">${j.edad||'—'} años</p>
+                    </div>
+                </div>`;
+            document.getElementById('modalCrafft').style.display = 'flex';
+        }
+
+        function mostrarCrafftSinFecha() {
+            const sinFecha = jovenesVigentes.filter(j => !j.fechaCrafft);
+            document.getElementById('modalCrafftTitle').textContent = 'Sin fecha CRAFFT/ASSIST';
+            let html = `<p style="color:#888; margin-bottom:12px;">Los siguientes ${sinFecha.length} jóvenes no tienen registrada la fecha del instrumento:</p>`;
+            sinFecha.forEach((j, i) => {
+                html += `<div style="display:flex; align-items:center; gap:10px; padding:10px 14px; background:${i%2===0?'#f5f5f7':'#fff'}; border-radius:8px; margin-bottom:6px;">
+                    <span style="background:#ff3b30; color:white; border-radius:50%; width:28px; height:28px; display:flex; align-items:center; justify-content:center; font-size:12px; font-weight:600; flex-shrink:0;">${i+1}</span>
+                    <div>
+                        <p style="margin:0; font-weight:600; color:#1d1d1f;">${j.nombre}</p>
+                        <p style="margin:0; font-size:12px; color:#888;">${j.rut||''} — ${j.situacionEUE||''}</p>
+                    </div>
+                </div>`;
+            });
+            document.getElementById('modalCrafftContent').innerHTML = html;
+            document.getElementById('modalCrafft').style.display = 'flex';
+        }
+
+        // ========== ORDENAR GRÁFICOS ==========
+        const sortState = {};
+        function sortChart(chartId) {
+            const chartMap = { chartSanciones, chartFamilia, chartRangoEtario };
+            const chart = chartMap[chartId];
+            if (!chart) return;
+            const dataset = chart.data.datasets[0];
+            const labels = chart.data.labels;
+            const data = dataset.data;
+            const combined = labels.map((l, i) => ({ label: l, value: data[i] }));
+            sortState[chartId] = !sortState[chartId];
+            const asc = sortState[chartId];
+            combined.sort((a, b) => asc ? a.value - b.value : b.value - a.value);
+            chart.data.labels = combined.map(x => x.label);
+            dataset.data = combined.map(x => x.value);
+            chart.update();
+            // update icon
+            const iconId = 'icon' + chartId.replace('chart','');
+            const icon = document.getElementById(iconId);
+            if (icon) icon.className = asc ? 'fas fa-sort-amount-up' : 'fas fa-sort-amount-down';
+        }
+
+        function actualizarDashboard() {
+            const todos = jovenesVigentes;
+            const vigentes = todos.filter(j => j.situacionEUE === 'Vigente').length;
+            const sinContacto = todos.filter(j => j.situacionEUE === 'Ingreso sin contacto').length;
+            const egresados = jovenesNoVigentes.length; // Los no vigentes son los egresados reales
+            document.getElementById('totalVigentes').textContent = vigentes;
+            document.getElementById('totalSinContacto').textContent = sinContacto;
+            document.getElementById('totalEgresados').textContent = egresados;
+            
+            const activos = todos.filter(j => j.situacionEUE === 'Vigente' || j.situacionEUE === 'Ingreso sin contacto');
+            const conEdad = activos.filter(j => j.edad).map(j => parseInt(j.edad));
+            document.getElementById('promedioEdad').textContent = conEdad.length ? Math.round(conEdad.reduce((a,b) => a+b, 0) / conEdad.length) : 0;
+
+            // Categorías por sanción: SOLO jóvenes con situación "Vigente"
+            const soloVigentes = todos.filter(j => j.situacionEUE === 'Vigente');
+            const cats = { 'Menor a 1 año': 0, '≥ 1 año': 0, '≥ 2 años': 0, '≥ 3 años': 0, 'Sin datos': 0 };
+            soloVigentes.forEach(j => { const cat = getCategoriaSancionReal(j); if (cats[cat] !== undefined) cats[cat]++; else cats['Sin datos']++; });
+            if (cats['Sin datos'] === 0) delete cats['Sin datos'];
+            const catColors = { 'Menor a 1 año': '#28cd41', '≥ 1 año': '#ff9f0a', '≥ 2 años': '#ff3b30', '≥ 3 años': '#0071e3', 'Sin datos': '#86868b' };
+            if (chartSanciones) chartSanciones.destroy();
+            chartSanciones = new Chart(document.getElementById('chartSanciones'), { type: 'bar', data: { labels: Object.keys(cats), datasets: [{ label: 'Jóvenes', data: Object.values(cats), backgroundColor: Object.keys(cats).map(k => catColors[k] || '#86868b'), borderRadius: 8 }] }, options: { responsive: true, maintainAspectRatio: true, plugins: { legend: { display: false }, datalabels: { anchor: 'end', align: 'top', offset: 6, color: '#1d1d1f', font: { weight: 'bold', size: 14 }, formatter: (value, ctx) => { const total = ctx.dataset.data.reduce((a,b) => a+b, 0); const pct = total > 0 ? ((value/total)*100).toFixed(1) : 0; return value > 0 ? value + ' (' + pct + '%)' : ''; } } }, scales: { y: { beginAtZero: true, grid: { color: '#e8e8ec' } } } } });
+            
+            const delitos = {}; activos.forEach(j => { if (j.tipoDelito1) delitos[j.tipoDelito1] = (delitos[j.tipoDelito1] || 0) + 1; });
+            const totalDelitos = Object.values(delitos).reduce((a,b) => a+b, 0);
+            if (chartDelitos) chartDelitos.destroy();
+            chartDelitos = new Chart(document.getElementById('chartDelitos'), { type: 'doughnut', data: { labels: Object.keys(delitos), datasets: [{ data: Object.values(delitos), backgroundColor: chartColors, borderWidth: 0 }] }, options: { responsive: true, maintainAspectRatio: true, plugins: { legend: { position: 'right', labels: { boxWidth: 12, font: { size: 11 } } }, datalabels: { color: 'white', font: { weight: 'bold', size: 12 }, formatter: (value) => { const pct = totalDelitos > 0 ? ((value/totalDelitos)*100).toFixed(1) : 0; return value > 0 ? `${value} (${pct}%)` : ''; } } }, cutout: '60%' } });
+            
+            const familias = {}; activos.forEach(j => { if (j.tipoFamilia) familias[j.tipoFamilia] = (familias[j.tipoFamilia] || 0) + 1; });
+            const totalFamilias = Object.values(familias).reduce((a,b) => a+b, 0);
+            if (chartFamilia) chartFamilia.destroy();
+            chartFamilia = new Chart(document.getElementById('chartFamilia'), { type: 'bar', data: { labels: Object.keys(familias), datasets: [{ data: Object.values(familias), backgroundColor: chartColors, borderRadius: 8 }] }, options: { responsive: true, maintainAspectRatio: true, plugins: { legend: { display: false }, datalabels: { anchor: 'end', align: 'top', offset: 6, color: '#1d1d1f', font: { weight: 'bold', size: 13 }, formatter: (value) => { const pct = totalFamilias > 0 ? ((value/totalFamilias)*100).toFixed(1) : 0; return value > 0 ? value + ' (' + pct + '%)' : ''; } } }, scales: { y: { beginAtZero: true } } } });
+            
+            const rangos = {}; activos.forEach(j => { if (j.rangoEtario) rangos[j.rangoEtario] = (rangos[j.rangoEtario] || 0) + 1; });
+            const totalRangos = Object.values(rangos).reduce((a,b) => a+b, 0);
+            if (chartRangoEtario) chartRangoEtario.destroy();
+            chartRangoEtario = new Chart(document.getElementById('chartRangoEtario'), { type: 'bar', data: { labels: Object.keys(rangos), datasets: [{ data: Object.values(rangos), backgroundColor: '#4facfe', borderRadius: 8 }] }, options: { responsive: true, maintainAspectRatio: true, plugins: { legend: { display: false }, datalabels: { anchor: 'end', align: 'top', offset: 6, color: '#1d1d1f', font: { weight: 'bold', size: 13 }, formatter: (value) => { const pct = totalRangos > 0 ? ((value/totalRangos)*100).toFixed(1) : 0; return value > 0 ? `${value}\n(${pct}%)` : ''; } } } } });
+            
+            const tipicidad = {};
+            activos.forEach(j => { if (j.rangoEtario && j.tipoDelito1) { if (!tipicidad[j.rangoEtario]) tipicidad[j.rangoEtario] = {}; tipicidad[j.rangoEtario][j.tipoDelito1] = (tipicidad[j.rangoEtario][j.tipoDelito1] || 0) + 1; } });
+            const rangosUnicos = Object.keys(tipicidad).sort();
+            const delitosUnicos = [...new Set(activos.map(j => j.tipoDelito1).filter(d => d))];
+            const datasets = delitosUnicos.map((d, i) => ({ label: d, data: rangosUnicos.map(r => tipicidad[r]?.[d] || 0), backgroundColor: chartColors[i % chartColors.length], borderRadius: 6 }));
+            if (chartTipicidad) chartTipicidad.destroy();
+            chartTipicidad = new Chart(document.getElementById('chartTipicidad'), { type: 'bar', data: { labels: rangosUnicos, datasets }, options: { responsive: true, maintainAspectRatio: true, plugins: { datalabels: { anchor: 'end', align: 'top', offset: 2, color: '#1d1d1f', font: { weight: 'bold', size: 10 }, formatter: (value) => value > 0 ? value : '' } }, scales: { x: { stacked: false }, y: { stacked: false, beginAtZero: true } } } });
+        }
+
+        // ==================== EXPORTAR EXCEL COMPLETO ====================
+        function exportarExcelCompleto() {
+            const todos = currentView === 'vigentes' ? jovenesVigentes : jovenesNoVigentes;
+            const data = todos.map(j => ({
+                'Nombre': j.nombre || '',
+                'RUT': j.rut || '',
+                'Fecha Nacimiento': j.fechaNacimiento || '',
+                'Edad': j.edad || '',
+                'Género': j.genero || '',
+                'Nacionalidad': j.nacionalidad || '',
+                'Situación EUE': j.situacionEUE || '',
+                'Edad Ingreso': j.edadIngreso || '',
+                'Rango Etario': j.rangoEtario || '',
+                'Pertenencia Étnica': j.pertenenciaEtnica || '',
+                'Ruralidad': j.ruralidad || '',
+                'Tipo Joven': j.tipoJoven || '',
+                'Fecha Ingreso EUE': j.fechaIngresoEUE || '',
+                'Comuna/Ciudad': j.comuna || '',
+                'Dirección': j.direccion || '',
+                'Teléfono': j.telefono || '',
+                'Email': j.email || '',
+                'Padre': j.nombrePadre || '',
+                'Madre': j.nombreMadre || '',
+                '¿Tiene hijos?': j.tieneHijos || '',
+                'Adulto a cargo': j.adultoCargo || '',
+                'Relación adulto': j.relacionAdulto || '',
+                'Tipo Familia': j.tipoFamilia || '',
+                'Educación adulto': j.educacionAdulto || '',
+                'Ocupación adulto': j.ocupacionAdulto || '',
+                'Contacto adulto': j.contactoAdulto || '',
+                'Vive con': j.viveCon || '',
+                'Obs. Familiares': j.obsFamiliares || '',
+                'Previsión': j.prevSalud || '',
+                'Tramo FONASA': j.tramoFONASA || '',
+                '¿Salud física?': j.problemaSaludFisica || '',
+                'Especificar salud física': j.especificarSaludFisica || '',
+                '¿Salud mental?': j.problemaSaludMental || '',
+                'Especificar salud mental': j.especificarSaludMental || '',
+                '¿Toma medicamentos?': j.tomaMedicamentos || '',
+                'Medicamentos': j.medicamentos || '',
+                'Discapacidad': j.discapacidad || '',
+                'Fecha CRAFFT/ASSIST': j.fechaCrafft || '',
+                '¿Consumo drogas?': j.consumoDrogas || '',
+                'Tipo consumo': j.tipoConsumo || '',
+                'Tipo de droga': j.tipoDroga || '',
+                'Institución tratamiento': j.institucionTratamiento || '',
+                'Adherencia': j.tipoAdherencia || '',
+                'Simultaneidad SPE': j.simultaneidadSPE || '',
+                'Especificar SPE': j.especificarSPE || '',
+                'Simultaneidad RPA': j.simultaneidadRPA || '',
+                'Especificar RPA': j.especificarRPA || '',
+                'Obs. Salud': j.obsSalud || '',
+                'Tribunal Origen': j.tribunalOrigen || '',
+                'Tribunal Ejecución': j.tribunalEjecucion || '',
+                'Fecha Derivación': j.fechaDerivacion || '',
+                'Delito 1': j.tipoDelito1 || '',
+                'Causal 1': j.causalIngreso1 || '',
+                'Delito 2': j.tipoDelito2 || '',
+                'Causal 2': j.causalIngreso2 || '',
+                'Delito 3': j.tipoDelito3 || '',
+                'Causal 3': j.causalIngreso3 || '',
+                'Sanción (años)': j.s1anios || '0',
+                'Sanción (meses)': j.s1meses || '0',
+                'Sanción (días)': j.s1dias || '0',
+                'Abono (días)': j.s1abono || '0',
+                'Sanción (texto)': formatSancionTexto(j),
+                'Total días': (() => { const sd = calcularDatosSancion(j); return sd.totalDiasSentencia; })(),
+                'Días cumplidos': (() => { const sd = calcularDatosSancion(j); return sd.diasCumplidos; })(),
+                'Días restantes': (() => { const sd = calcularDatosSancion(j); return sd.diasRestantes; })(),
+                'Fecha egreso': (() => { const sd = calcularDatosSancion(j); return sd.fechaEgresoEstimada; })(),
+                'Categoría Sanción': getCategoriaSancionReal(j),
+                'Obs. Judiciales': j.obsJudiciales || '',
+                'Nivel Educacional': j.nivelEducacional || '',
+                'Último curso': j.ultimoCurso || '',
+                '¿Estudia?': j.estudiaActualmente || '',
+                'Tipo Establecimiento': j.tipoEstablecimiento || '',
+                'Nombre Institución': j.nombreInstitucion || '',
+                'Curso/Nivel': j.cursoNivel || '',
+                'Jornada': j.jornada || '',
+                'Obs. Educacionales': j.obsEducacionales || '',
+                'Situación Laboral': j.situacionLaboral || '',
+                'Tipo Contrato': j.tipoContrato || '',
+                'Tipo Trabajo': j.tipoTrabajo || '',
+                'Ocupación/Cargo': j.ocupacion || '',
+                'Empleador': j.empleador || '',
+                'Obs. Laborales': j.obsLaborales || '',
+                '¿Programa protección?': j.enProgramaProteccion || '',
+                'Tipo Programa': j.tipoPrograma || '',
+                'Nombre Programa': j.nombrePrograma || '',
+                'Fecha Ingreso Programa': j.fechaIngresoPrograma || '',
+                'Obs. Protección': j.obsProteccion || '',
+                'RSH': j.tieneRSH || '',
+                'Tramo RSH': j.tramoRSH || '',
+                'Ingreso Familiar': j.ingresoFamiliar || '',
+                'Integrantes Hogar': j.integrantesHogar || '',
+                'Ingreso Per Cápita': j.ingresoPerCapita || '',
+                'Fecha Creación': j.fechaCreacion || '',
+                'Fecha Actualización': j.fechaActualizacion || '',
+                'Fecha No Vigente': j.fechaNoVigente || ''
+            }));
+            
+            const ws = XLSX.utils.json_to_sheet(data);
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, "Jóvenes");
+            XLSX.writeFile(wb, `reporte_completo_${currentView}_${new Date().toISOString().split('T')[0]}.xlsx`);
+        }
+
+        // ==================== EXPORTAR PDF ====================
+        async function exportarPDF(id) {
+            const j = (currentView === 'vigentes' ? jovenesVigentes : jovenesNoVigentes).find(x => x.id === id);
+            if (!j) return;
+            
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+            
+            doc.setFontSize(18);
+            doc.setTextColor(29, 29, 31);
+            doc.text('FICHA COMPLETA - LAE Los Ríos', 105, 20, { align: 'center' });
+            
+            doc.setFontSize(11);
+            let y = 35;
+            const lineHeight = 6;
+            
+            const addLine = (label, value) => {
+                if (value !== undefined && value !== null && value !== '') {
+                    doc.setFont(undefined, 'bold');
+                    doc.text(`${label}:`, 15, y);
+                    doc.setFont(undefined, 'normal');
+                    doc.text(String(value), 70, y);
+                    y += lineHeight;
+                }
+            };
+            
+            const addSection = (title) => {
+                doc.setFontSize(13);
+                doc.setTextColor(0, 113, 227);
+                doc.setFont(undefined, 'bold');
+                doc.text(title, 15, y);
+                doc.setFontSize(11);
+                doc.setTextColor(29, 29, 31);
+                doc.setFont(undefined, 'normal');
+                y += lineHeight + 2;
+            };
+            
+            const addSpacer = () => { y += 4; };
+            
+            addSection('DATOS PERSONALES');
+            addLine('Nombre', j.nombre);
+            addLine('RUN/RUT', j.rut);
+            addLine('Fecha Nacimiento', j.fechaNacimiento);
+            addLine('Edad', j.edad ? j.edad + ' años' : '');
+            addLine('Género', j.genero);
+            addLine('Nacionalidad', j.nacionalidad);
+            addLine('Situación EUE', j.situacionEUE);
+            addLine('Edad Ingreso', j.edadIngreso);
+            addLine('Rango Etario', j.rangoEtario);
+            addLine('Pertenencia Étnica', j.pertenenciaEtnica);
+            addLine('Ruralidad', j.ruralidad);
+            addLine('Tipo Joven', j.tipoJoven);
+            addLine('Fecha Ingreso EUE', j.fechaIngresoEUE);
+            addLine('Comuna/Ciudad', j.comuna);
+            addLine('Dirección', j.direccion);
+            addLine('Teléfono', j.telefono);
+            addLine('Email', j.email);
+            addSpacer();
+            
+            if (y > 250) { doc.addPage(); y = 25; }
+            
+            addSection('DATOS FAMILIARES');
+            addLine('Padre', j.nombrePadre);
+            addLine('Madre', j.nombreMadre);
+            addLine('¿Tiene hijos?', j.tieneHijos);
+            addLine('Adulto a cargo', j.adultoCargo);
+            addLine('Relación adulto', j.relacionAdulto);
+            addLine('Tipo Familia', j.tipoFamilia);
+            addLine('Educación adulto', j.educacionAdulto);
+            addLine('Ocupación adulto', j.ocupacionAdulto);
+            addLine('Contacto adulto', j.contactoAdulto);
+            addLine('Vive con', j.viveCon);
+            addLine('Observaciones', j.obsFamiliares);
+            addSpacer();
+            
+            if (y > 250) { doc.addPage(); y = 25; }
+            
+            addSection('SALUD');
+            addLine('Previsión', j.prevSalud);
+            addLine('Tramo FONASA', j.tramoFONASA);
+            addLine('¿Salud física?', j.problemaSaludFisica);
+            if (j.problemaSaludFisica === 'Sí') addLine('  Especificar', j.especificarSaludFisica);
+            addLine('¿Salud mental?', j.problemaSaludMental);
+            if (j.problemaSaludMental === 'Sí') addLine('  Especificar', j.especificarSaludMental);
+            addLine('¿Toma medicamentos?', j.tomaMedicamentos);
+            addLine('Medicamentos', j.medicamentos);
+            addLine('Discapacidad', j.discapacidad);
+            addLine('Fecha aprobación Plan Inicial', j.fechaAprobacionPlan);
+            addLine('Fecha CRAFFT/ASSIST', j.fechaCrafft);
+            if (j.tuvoNecesidadUrgencia === 'Sí') {
+                addLine('Necesidad de urgencia al ingreso', 'SÍ — ' + (j.tipoNecesidadUrgencia || ''));
+            } else {
+                addLine('Necesidad de urgencia al ingreso', 'No');
+            }
+            addLine('¿Consumo drogas?', j.consumoDrogas);
+            if (j.consumoDrogas === 'Sí') {
+                addLine('  Tipo consumo', j.tipoConsumo);
+                addLine('  Tipo de droga', j.tipoDroga);
+                addLine('  Institución tratamiento', j.institucionTratamiento);
+                addLine('  Adherencia', j.tipoAdherencia);
+            }
+            addLine('Simultaneidad SPE', j.simultaneidadSPE);
+            if (j.simultaneidadSPE === 'Sí') addLine('  Especificar', j.especificarSPE);
+            addLine('Simultaneidad RPA', j.simultaneidadRPA);
+            if (j.simultaneidadRPA === 'Sí') addLine('  Especificar', j.especificarRPA);
+            addLine('Observaciones', j.obsSalud);
+            addSpacer();
+            
+            if (y > 250) { doc.addPage(); y = 25; }
+            
+            addSection('DATOS JUDICIALES');
+            addLine('Tribunal Origen', j.tribunalOrigen);
+            addLine('Tribunal Ejecución', j.tribunalEjecucion);
+            addLine('Fecha Derivación', j.fechaDerivacion);
+            addLine('Delito 1', j.tipoDelito1);
+            addLine('Causal 1', j.causalIngreso1);
+            if (j.tipoDelito2) { addLine('Delito 2', j.tipoDelito2); addLine('Causal 2', j.causalIngreso2); }
+            if (j.tipoDelito3) { addLine('Delito 3', j.tipoDelito3); addLine('Causal 3', j.causalIngreso3); }
+            addLine('Sanción', formatSancionTexto(j));
+            addLine('Abono', (j.s1abono || 0) + ' días');
+            // Calcular en tiempo real para el PDF
+            const sdPDF = calcularDatosSancion(j);
+            addLine('Total días', sdPDF.totalDiasSentencia);
+            addLine('Días cumplidos', sdPDF.diasCumplidos);
+            addLine('Días restantes', sdPDF.diasRestantes);
+            addLine('Fecha egreso', sdPDF.fechaEgresoEstimada);
+            addLine('Categoría', getCategoriaSancionReal(j));
+            addLine('Observaciones', j.obsJudiciales);
+            addSpacer();
+            
+            if (y > 250) { doc.addPage(); y = 25; }
+            
+            addSection('EDUCACIÓN');
+            addLine('Nivel Educacional', j.nivelEducacional);
+            addLine('Último curso', j.ultimoCurso);
+            addLine('¿Estudia?', j.estudiaActualmente);
+            if (j.estudiaActualmente === 'Sí') {
+                addLine('  Tipo Establecimiento', j.tipoEstablecimiento);
+                addLine('  Nombre Institución', j.nombreInstitucion);
+                addLine('  Curso/Nivel', j.cursoNivel);
+                addLine('  Jornada', j.jornada);
+            }
+            addLine('Observaciones', j.obsEducacionales);
+            addSpacer();
+            
+            if (y > 250) { doc.addPage(); y = 25; }
+            
+            addSection('LABORAL');
+            addLine('Situación Laboral', j.situacionLaboral);
+            if (j.situacionLaboral === 'Trabajando' || j.situacionLaboral === 'Estudiante que trabaja') {
+                addLine('  Tipo Contrato', j.tipoContrato);
+                addLine('  Tipo Trabajo', j.tipoTrabajo);
+                addLine('  Ocupación/Cargo', j.ocupacion);
+                addLine('  Empleador', j.empleador);
+            }
+            addLine('Observaciones', j.obsLaborales);
+            addSpacer();
+            
+            if (y > 250) { doc.addPage(); y = 25; }
+            
+            addSection('PROTECCIÓN');
+            addLine('¿Programa protección?', j.enProgramaProteccion);
+            if (j.enProgramaProteccion === 'Sí') {
+                addLine('  Tipo Programa', j.tipoPrograma);
+                addLine('  Nombre Programa', j.nombrePrograma);
+                addLine('  Fecha Ingreso', j.fechaIngresoPrograma);
+            }
+            addLine('Observaciones', j.obsProteccion);
+            addSpacer();
+            
+            addSection('SOCIOECONÓMICO');
+            addLine('RSH', j.tieneRSH);
+            addLine('Tramo RSH', j.tramoRSH);
+            addLine('Ingreso Familiar', j.ingresoFamiliar ? '$' + parseInt(j.ingresoFamiliar).toLocaleString('es-CL') : '');
+            addLine('Integrantes Hogar', j.integrantesHogar);
+            addLine('Ingreso Per Cápita', j.ingresoPerCapita ? '$' + parseInt(j.ingresoPerCapita).toLocaleString('es-CL') : '');
+            
+            doc.save(`ficha_completa_${j.rut}_${new Date().toISOString().split('T')[0]}.pdf`);
+        }
+
+        function exportarEstadisticasExcel() {
+            const todos = [...jovenesVigentes];
+            const activos = todos.filter(j => j.situacionEUE === 'Vigente' || j.situacionEUE === 'Ingreso sin contacto');
+            const total = activos.length;
+            const wb = XLSX.utils.book_new();
+
+            // Hoja 1: Resumen general
+            XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet([{
+                'Total jóvenes activos': total,
+                'Vigentes': todos.filter(j => j.situacionEUE === 'Vigente').length,
+                'Ingreso sin contacto': todos.filter(j => j.situacionEUE === 'Ingreso sin contacto').length,
+                'Egresados (no vigentes)': jovenesNoVigentes.length
+            }]), "Resumen");
+
+            // Hoja 2: Categorías de sanción
+            const cats = { 'Menor a 1 año': 0, '≥ 1 año': 0, '≥ 2 años': 0, '≥ 3 años': 0, 'Sin datos': 0 };
+            // Solo jóvenes con situación "Vigente" para categorías de sanción
+            const soloVigentesExcel = todos.filter(j => j.situacionEUE === 'Vigente');
+            soloVigentesExcel.forEach(j => { const cat = getCategoriaSancionReal(j); cats[cat] = (cats[cat]||0)+1; });
+            XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(
+                Object.entries(cats).map(([k,v]) => ({ 'Categoría': k, 'Cantidad': v, 'Porcentaje': total > 0 ? ((v/total)*100).toFixed(1)+'%' : '0%' }))
+            ), "Categorías Sanción");
+
+            // Hoja 3: Tipos de delito
+            const delitos = {};
+            activos.forEach(j => { if (j.tipoDelito1) delitos[j.tipoDelito1] = (delitos[j.tipoDelito1]||0) + 1; });
+            XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(
+                Object.entries(delitos).sort((a,b)=>b[1]-a[1]).map(([k,v]) => ({ 'Tipo Delito': k, 'Cantidad': v, 'Porcentaje': total > 0 ? ((v/total)*100).toFixed(1)+'%' : '0%' }))
+            ), "Tipos Delito");
+
+            // Hoja 4: Tipo de familia
+            const familias = {};
+            activos.forEach(j => { if (j.tipoFamilia) familias[j.tipoFamilia] = (familias[j.tipoFamilia]||0) + 1; });
+            XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(
+                Object.entries(familias).sort((a,b)=>b[1]-a[1]).map(([k,v]) => ({ 'Tipo Familia': k, 'Cantidad': v, 'Porcentaje': total > 0 ? ((v/total)*100).toFixed(1)+'%' : '0%' }))
+            ), "Tipo Familia");
+
+            // Hoja 5: Rango etario
+            const rangos = {};
+            activos.forEach(j => { if (j.rangoEtario) rangos[j.rangoEtario] = (rangos[j.rangoEtario]||0) + 1; });
+            XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(
+                Object.entries(rangos).sort((a,b)=>b[1]-a[1]).map(([k,v]) => ({ 'Rango Etario': k, 'Cantidad': v, 'Porcentaje': total > 0 ? ((v/total)*100).toFixed(1)+'%' : '0%' }))
+            ), "Rango Etario");
+
+            // Hoja 6: Ingreso sin contacto
+            const sinContacto = todos.filter(j => j.situacionEUE === 'Ingreso sin contacto');
+            XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(
+                sinContacto.map(j => ({ 'Nombre': j.nombre, 'RUT': j.rut||'', 'Comuna': j.comuna||'', 'Fecha Ingreso EUE': j.fechaIngresoEUE||'' }))
+            ), "Ingreso Sin Contacto");
+
+            // Hoja 7: Necesidades de urgencia
+            const conUrgencia = todos.filter(j => j.tuvoNecesidadUrgencia === 'Sí');
+            XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(
+                conUrgencia.map(j => ({ 'Nombre': j.nombre, 'RUT': j.rut||'', 'Tipo Necesidad': j.tipoNecesidadUrgencia||'', 'Situación EUE': j.situacionEUE||'' }))
+            ), "Necesidades Urgencia");
+
+            XLSX.writeFile(wb, 'estadisticas_LAE_' + new Date().toISOString().split('T')[0] + '.xlsx');
+        }
+    </script>
+</body>
+</html>
