@@ -923,8 +923,8 @@
         <div class="login-box">
             <h2><i class="fas fa-lock"></i> LAE Los Ríos</h2>
             <p style="color: var(--apple-gray); margin-bottom: 25px;">Ingrese la contraseña para acceder</p>
-            <input type="password" id="loginPasswordInput" placeholder="Contraseña" onkeypress="if(event.key==='Enter') verificarLogin()">
-            <button onclick="verificarLogin()">Ingresar al Sistema</button>
+            <input type="password" id="loginPasswordInput" placeholder="Contraseña" onkeydown="if(event.key==='Enter'){ event.preventDefault(); doLogin(); }">
+            <button type="button" onclick="doLogin()">Ingresar al Sistema</button>
             <div class="error-msg" id="loginError"></div>
         </div>
     </div>
@@ -973,7 +973,7 @@
                 <div class="stats-dashboard" id="statsDashboard">
                     <div class="stats-header">
                         <h2><i class="fas fa-chart-bar"></i> Panel Estadístico</h2>
-                        <button class="btn-excel" onclick="exportarEstadisticasExcel()" style="padding:8px 16px;"><i class="fas fa-download"></i> Descargar Reporte</button>
+                        <div style="display:flex;gap:10px;"><button class="btn-excel" onclick="exportarEstadisticasExcel()" style="padding:8px 16px;"><i class="fas fa-file-excel"></i> Descargar Excel</button><button onclick="exportarEstadisticasPDF()" style="background:linear-gradient(135deg,#ff3b30,#c0392b);color:white;padding:8px 16px;border-radius:20px;border:none;font-weight:500;cursor:pointer;display:flex;align-items:center;gap:8px;font-size:14px;"><i class="fas fa-file-pdf"></i> Descargar PDF</button></div>
                     </div>
                     <div class="stats-grid">
                         <div class="stat-card"><h3>Vigentes</h3><div class="stat-number" id="totalVigentes">0</div></div>
@@ -1016,7 +1016,17 @@
 
                     <!-- NECESIDADES DE URGENCIA -->
                     <div class="chart-box" style="margin-top:20px; grid-column: 1 / -1; border:1.5px solid #ffb3a0;">
-                        <h3 style="color:#c0392b;"><i class="fas fa-exclamation-triangle"></i> Necesidades de Urgencia <span style="font-size:12px; font-weight:400; color:#888; margin-left:8px;">Plazo 7 días corridos desde ingreso EUE</span></h3>
+                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; flex-wrap:wrap; gap:10px;">
+                            <h3 style="color:#c0392b; margin-bottom:0;"><i class="fas fa-exclamation-triangle"></i> Necesidades de Urgencia <span style="font-size:12px; font-weight:400; color:#888; margin-left:8px;">Plazo 7 días corridos desde ingreso EUE</span></h3>
+                            <div style="display:flex; gap:8px;">
+                                <button onclick="exportarUrgenciaExcel()" style="background:#28cd41; color:white; padding:7px 14px; border-radius:20px; border:none; font-weight:500; cursor:pointer; display:flex; align-items:center; gap:6px; font-size:13px;">
+                                    <i class="fas fa-file-excel"></i> Excel
+                                </button>
+                                <button onclick="exportarUrgenciaPDF()" style="background:linear-gradient(135deg,#ff3b30,#c0392b); color:white; padding:7px 14px; border-radius:20px; border:none; font-weight:500; cursor:pointer; display:flex; align-items:center; gap:6px; font-size:13px;">
+                                    <i class="fas fa-file-pdf"></i> PDF
+                                </button>
+                            </div>
+                        </div>
                         <div id="necesidadesUrgenciaList" style="width:100%;">
                             <div style="text-align:center; color:#888; padding:20px;">Cargando...</div>
                         </div>
@@ -1042,6 +1052,24 @@
                     <div class="chart-box" style="margin-top:20px; grid-column: 1 / -1;">
                         <h3><i class="fas fa-calendar-check"></i> Fechas CRAFFT/ASSIST — del más antiguo al más reciente</h3>
                         <div id="crafftList" style="width:100%; overflow-x:auto;">
+                            <div style="text-align:center; color:#888; padding:20px;">Cargando...</div>
+                        </div>
+                    </div>
+
+                    <!-- COLUMBIA Chart -->
+                    <div class="chart-box" style="margin-top:20px; grid-column: 1 / -1; border:2px solid #764ba2;">
+                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; flex-wrap:wrap; gap:10px;">
+                            <h3 style="color:#764ba2; margin:0;"><i class="fas fa-brain"></i> Escala Columbia — Riesgo Suicida <span style="font-size:12px; font-weight:400; color:#888; margin-left:8px;">Plazo 7 días desde ingreso EUE</span></h3>
+                            <div style="display:flex; gap:8px;">
+                                <button onclick="exportarColumbiaExcel()" style="background:#28cd41; color:white; padding:7px 14px; border-radius:20px; border:none; font-weight:500; cursor:pointer; display:flex; align-items:center; gap:6px; font-size:13px;">
+                                    <i class="fas fa-file-excel"></i> Excel
+                                </button>
+                                <button onclick="exportarColumbiaPDF()" style="background:linear-gradient(135deg,#764ba2,#4a0080); color:white; padding:7px 14px; border-radius:20px; border:none; font-weight:500; cursor:pointer; display:flex; align-items:center; gap:6px; font-size:13px;">
+                                    <i class="fas fa-file-pdf"></i> PDF
+                                </button>
+                            </div>
+                        </div>
+                        <div id="columbiaList" style="width:100%; overflow-x:auto;">
                             <div style="text-align:center; color:#888; padding:20px;">Cargando...</div>
                         </div>
                     </div>
@@ -1128,6 +1156,8 @@
                                     <div class="form-group full-width"><label>Medicamentos</label><input type="text" id="medicamentos"></div>
                                     <div class="form-group"><label>Discapacidad</label><select id="discapacidad"><option value="Ninguna">Ninguna</option><option value="Física">Física</option><option value="Sensorial">Sensorial</option><option value="Intelectual">Intelectual</option><option value="Psíquica">Psíquica</option><option value="Múltiple">Múltiple</option></select></div>
                                     <div class="form-group"><label>Fecha CRAFFT/ASSIST</label><input type="date" id="fechaCrafft"></div>
+                                    <div class="form-group"><label>Fecha Columbia</label><input type="date" id="fechaColumbia"></div>
+                                    <div class="form-group"><label>Resultado Columbia</label><select id="resultadoColumbia"><option value="">Sin aplicar</option><option value="Sin riesgo">Sin riesgo</option><option value="Riesgo bajo">Riesgo bajo</option><option value="Riesgo moderado">Riesgo moderado</option><option value="Riesgo alto">Riesgo alto</option></select></div>
                                     <div class="form-group"><label>¿Consumo drogas?</label><select id="consumoDrogas" onchange="toggleField('drogas-field', this.value)"><option value="No">No</option><option value="Sí">Sí</option></select></div>
                                     <div class="form-group drogas-field" style="display:none;"><label>Tipo consumo</label><select id="tipoConsumo"><option value="">Seleccionar</option><option value="Habitual">Habitual</option><option value="Problemático">Problemático</option><option value="Ocasional">Ocasional</option><option value="Sin consumo">Sin consumo</option></select></div>
                                     <div class="form-group drogas-field" style="display:none;"><label>Tipo de droga</label><input type="text" id="tipoDroga"></div>
@@ -1308,6 +1338,26 @@
                                                 <option value="Salud Mental">Salud Mental</option>
                                                 <option value="Salud Física">Salud Física</option>
                                                 <option value="Protección Especializada">Protección Especializada</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div style="display:grid; grid-template-columns:repeat(3,1fr); gap:12px; margin-top:14px; padding-top:12px; border-top:1px dashed #ffb3a0;">
+                                        <div style="background:white; border:1.5px solid #ffb3a0; border-radius:10px; padding:10px 14px;">
+                                            <label style="display:block; font-size:12px; font-weight:700; color:#c0392b; text-transform:uppercase; margin-bottom:6px;"><i class='fas fa-heartbeat' style='margin-right:5px;'></i>Salud</label>
+                                            <select id="urgenciaSalud" style="width:100%; border:1px solid #ddd; border-radius:6px; padding:5px 10px; font-size:13px;">
+                                                <option value="No">No</option><option value="Sí">Sí</option>
+                                            </select>
+                                        </div>
+                                        <div style="background:white; border:1.5px solid #ffb3a0; border-radius:10px; padding:10px 14px;">
+                                            <label style="display:block; font-size:12px; font-weight:700; color:#c0392b; text-transform:uppercase; margin-bottom:6px;"><i class='fas fa-exclamation-circle' style='margin-right:5px;'></i>Maltrato Fís./Psic.</label>
+                                            <select id="urgenciaMaltrato" style="width:100%; border:1px solid #ddd; border-radius:6px; padding:5px 10px; font-size:13px;">
+                                                <option value="No">No</option><option value="Sí">Sí</option>
+                                            </select>
+                                        </div>
+                                        <div style="background:white; border:1.5px solid #ffb3a0; border-radius:10px; padding:10px 14px;">
+                                            <label style="display:block; font-size:12px; font-weight:700; color:#c0392b; text-transform:uppercase; margin-bottom:6px;"><i class='fas fa-shield-alt' style='margin-right:5px;'></i>Abuso Sexual</label>
+                                            <select id="urgenciaAbusoSexual" style="width:100%; border:1px solid #ddd; border-radius:6px; padding:5px 10px; font-size:13px;">
+                                                <option value="No">No</option><option value="Sí">Sí</option>
                                             </select>
                                         </div>
                                     </div>
@@ -1792,7 +1842,7 @@
             document.getElementById('formTitle').textContent = 'Editar Registro';
             
             // Cargar todos los campos del formulario
-            const campos = ['nombre','rut','fechaNacimiento','edad','genero','nacionalidad','situacionEUE','edadIngreso','rangoEtario','pertenenciaEtnica','ruralidad','tipoJoven','fechaIngresoEUE','comuna','direccion','telefono','email','nombrePadre','nombreMadre','tieneHijos','adultoCargo','relacionAdulto','tipoFamilia','educacionAdulto','ocupacionAdulto','contactoAdulto','viveCon','obsFamiliares','prevSalud','tramoFONASA','problemaSaludFisica','especificarSaludFisica','problemaSaludMental','especificarSaludMental','tomaMedicamentos','medicamentos','discapacidad','fechaCrafft','consumoDrogas','tipoConsumo','tipoDroga','institucionTratamiento','tipoAdherencia','simultaneidadSPE','especificarSPE','simultaneidadRPA','especificarRPA','obsSalud','tribunalOrigen','tribunalEjecucion','fechaDerivacion','tipoDelito1','causalIngreso1','tipoDelito2','causalIngreso2','tipoDelito3','causalIngreso3','s1anios','s1meses','s1dias','s1abono','obsJudiciales','nivelEducacional','ultimoCurso','estudiaActualmente','tipoEstablecimiento','nombreInstitucion','cursoNivel','jornada','obsEducacionales','situacionLaboral','tipoContrato','tipoTrabajo','ocupacion','empleador','obsLaborales','enProgramaProteccion','tipoPrograma','nombrePrograma','fechaIngresoPrograma','obsProteccion','tieneRSH','tramoRSH','ingresoFamiliar','integrantesHogar','ingresoPerCapita','tuvoNecesidadUrgencia','tipoNecesidadUrgencia','fechaAprobacionPlan'];
+            const campos = ['nombre','rut','fechaNacimiento','edad','genero','nacionalidad','situacionEUE','edadIngreso','rangoEtario','pertenenciaEtnica','ruralidad','tipoJoven','fechaIngresoEUE','comuna','direccion','telefono','email','nombrePadre','nombreMadre','tieneHijos','adultoCargo','relacionAdulto','tipoFamilia','educacionAdulto','ocupacionAdulto','contactoAdulto','viveCon','obsFamiliares','prevSalud','tramoFONASA','problemaSaludFisica','especificarSaludFisica','problemaSaludMental','especificarSaludMental','tomaMedicamentos','medicamentos','discapacidad','fechaCrafft','consumoDrogas','tipoConsumo','tipoDroga','institucionTratamiento','tipoAdherencia','simultaneidadSPE','especificarSPE','simultaneidadRPA','especificarRPA','obsSalud','tribunalOrigen','tribunalEjecucion','fechaDerivacion','tipoDelito1','causalIngreso1','tipoDelito2','causalIngreso2','tipoDelito3','causalIngreso3','s1anios','s1meses','s1dias','s1abono','obsJudiciales','nivelEducacional','ultimoCurso','estudiaActualmente','tipoEstablecimiento','nombreInstitucion','cursoNivel','jornada','obsEducacionales','situacionLaboral','tipoContrato','tipoTrabajo','ocupacion','empleador','obsLaborales','enProgramaProteccion','tipoPrograma','nombrePrograma','fechaIngresoPrograma','obsProteccion','tieneRSH','tramoRSH','ingresoFamiliar','integrantesHogar','ingresoPerCapita','tuvoNecesidadUrgencia','tipoNecesidadUrgencia','fechaAprobacionPlan','urgenciaSalud','urgenciaMaltrato','urgenciaAbusoSexual','fechaColumbia','resultadoColumbia'];
             
             campos.forEach(campo => {
                 const elemento = document.getElementById(campo);
@@ -1830,8 +1880,7 @@
                 id: editingId || Date.now().toString() 
             };
             
-            const fields = ['nombre','rut','fechaNacimiento','edad','genero','nacionalidad','situacionEUE','edadIngreso','rangoEtario','pertenenciaEtnica','ruralidad','tipoJoven','fechaIngresoEUE','comuna','direccion','telefono','email','nombrePadre','nombreMadre','tieneHijos','adultoCargo','relacionAdulto','tipoFamilia','educacionAdulto','ocupacionAdulto','contactoAdulto','viveCon','obsFamiliares','prevSalud','tramoFONASA','problemaSaludFisica','especificarSaludFisica','problemaSaludMental','especificarSaludMental','tomaMedicamentos','medicamentos','discapacidad','fechaCrafft','consumoDrogas','tipoConsumo','tipoDroga','institucionTratamiento','tipoAdherencia','simultaneidadSPE','especificarSPE','simultaneidadRPA','especificarRPA','obsSalud','tribunalOrigen','tribunalEjecucion','fechaDerivacion','tipoDelito1','causalIngreso1','tipoDelito2','causalIngreso2','tipoDelito3','causalIngreso3','s1anios','s1meses','s1dias','s1abono','totalDiasSentencia','diasCumplidos','diasRestantes','fechaEgresoEstimada','obsJudiciales','nivelEducacional','ultimoCurso','estudiaActualmente','tipoEstablecimiento','nombreInstitucion','cursoNivel','jornada','obsEducacionales','situacionLaboral','tipoContrato','tipoTrabajo','ocupacion','empleador','obsLaborales','enProgramaProteccion','tipoPrograma','nombrePrograma','fechaIngresoPrograma','obsProteccion','tieneRSH','tramoRSH','ingresoFamiliar','integrantesHogar','ingresoPerCapita','tuvoNecesidadUrgencia','tipoNecesidadUrgencia','fechaAprobacionPlan'];
-            
+            const fields = ['nombre','rut','fechaNacimiento','edad','genero','nacionalidad','situacionEUE','edadIngreso','rangoEtario','pertenenciaEtnica','ruralidad','tipoJoven','fechaIngresoEUE','comuna','direccion','telefono','email','nombrePadre','nombreMadre','tieneHijos','adultoCargo','relacionAdulto','tipoFamilia','educacionAdulto','ocupacionAdulto','contactoAdulto','viveCon','obsFamiliares','prevSalud','tramoFONASA','problemaSaludFisica','especificarSaludFisica','problemaSaludMental','especificarSaludMental','tomaMedicamentos','medicamentos','discapacidad','fechaCrafft','consumoDrogas','tipoConsumo','tipoDroga','institucionTratamiento','tipoAdherencia','simultaneidadSPE','especificarSPE','simultaneidadRPA','especificarRPA','obsSalud','tribunalOrigen','tribunalEjecucion','fechaDerivacion','tipoDelito1','causalIngreso1','tipoDelito2','causalIngreso2','tipoDelito3','causalIngreso3','s1anios','s1meses','s1dias','s1abono','totalDiasSentencia','diasCumplidos','diasRestantes','fechaEgresoEstimada','obsJudiciales','nivelEducacional','ultimoCurso','estudiaActualmente','tipoEstablecimiento','nombreInstitucion','cursoNivel','jornada','obsEducacionales','situacionLaboral','tipoContrato','tipoTrabajo','ocupacion','empleador','obsLaborales','enProgramaProteccion','tipoPrograma','nombrePrograma','fechaIngresoPrograma','obsProteccion','tieneRSH','tramoRSH','ingresoFamiliar','integrantesHogar','ingresoPerCapita','tuvoNecesidadUrgencia','tipoNecesidadUrgencia','fechaAprobacionPlan','urgenciaSalud','urgenciaMaltrato','urgenciaAbusoSexual','fechaColumbia','resultadoColumbia'];            
             fields.forEach(f => { 
                 const el = document.getElementById(f); 
                 if (el) j[f] = el.value; 
@@ -1974,7 +2023,7 @@
             document.getElementById('welcomeScreen').style.display = 'none'; 
             document.getElementById('formContainer').style.display = 'none'; 
             document.getElementById('detailsContainer').style.display = 'none';
-            if (d.classList.contains('show')) { actualizarDashboard(); renderSinContacto(); renderNecesidadesUrgencia(); renderInformesSeguimiento(); renderPlanesIntervencion(); renderCrafftPanel(); }
+            if (d.classList.contains('show')) { actualizarDashboard(); renderSinContacto(); renderNecesidadesUrgencia(); renderInformesSeguimiento(); renderPlanesIntervencion(); renderCrafftPanel(); renderColumbiaPanel(); }
         }
 
 
@@ -2265,12 +2314,18 @@
             }
 
             let html = `<p style="font-size:13px; color:#555; margin-bottom:12px;">Se encontraron <b>${conNecesidad.length}</b> joven(es) con necesidad de urgencia al ingreso:</p>`;
+            const badgeSiNo = (val) => val === 'Sí'
+                ? '<span style="background:#28cd41;color:white;border-radius:8px;padding:3px 10px;font-size:12px;font-weight:600;">Sí</span>'
+                : '<span style="background:#d2d2d7;color:#555;border-radius:8px;padding:3px 10px;font-size:12px;font-weight:600;">No</span>';
             html += `<div style="overflow-x:auto;"><table style="width:100%; border-collapse:collapse; font-size:13px;">
                 <thead><tr style="background:#c0392b; color:white;">
                     <th style="padding:10px 14px; text-align:left; border-radius:8px 0 0 0;">N°</th>
                     <th style="padding:10px 14px; text-align:left;">Nombre</th>
                     <th style="padding:10px 14px; text-align:left;">RUT</th>
                     <th style="padding:10px 14px; text-align:left;">Tipo de Necesidad</th>
+                    <th style="padding:10px 14px; text-align:center;">Salud</th>
+                    <th style="padding:10px 14px; text-align:center;">Maltrato Fís./Psic.</th>
+                    <th style="padding:10px 14px; text-align:center;">Abuso Sexual</th>
                     <th style="padding:10px 14px; text-align:left; border-radius:0 8px 0 0;">Situación EUE</th>
                 </tr></thead><tbody>`;
 
@@ -2290,6 +2345,9 @@
                     <td style="padding:9px 14px;">
                         <span style="background:${colorTipo[tipo]||'#888'}; color:white; border-radius:8px; padding:3px 10px; font-size:12px; font-weight:600;">${tipo}</span>
                     </td>
+                    <td style="padding:9px 14px; text-align:center;">${badgeSiNo(j.urgenciaSalud||'No')}</td>
+                    <td style="padding:9px 14px; text-align:center;">${badgeSiNo(j.urgenciaMaltrato||'No')}</td>
+                    <td style="padding:9px 14px; text-align:center;">${badgeSiNo(j.urgenciaAbusoSexual||'No')}</td>
                     <td style="padding:9px 14px; color:#555;">${j.situacionEUE||'—'}</td>
                 </tr>`;
             });
@@ -2620,6 +2678,336 @@
             document.getElementById('modalCrafft').style.display = 'flex';
         }
 
+        // ========== COLUMBIA EXPORTS ==========
+        function exportarColumbiaExcel() {
+            const todos = [...jovenesVigentes];
+            const hoy = new Date(); hoy.setHours(0,0,0,0);
+            const diasDesde = j => {
+                if(!j.fechaIngresoEUE) return null;
+                const f = new Date(j.fechaIngresoEUE); f.setHours(0,0,0,0);
+                return Math.floor((hoy - f) / 86400000);
+            };
+            const fmt = d => { if(!d) return ''; const [y,m,dia] = d.split('-'); return dia+'/'+m+'/'+y; };
+
+            const aplicados   = todos.filter(j => j.fechaColumbia && j.resultadoColumbia);
+            const sinAplicar  = todos.filter(j => !j.fechaColumbia || !j.resultadoColumbia);
+            const pendientes  = sinAplicar.filter(j => { const d=diasDesde(j); return d!==null && d<=7; });
+            const vencidos    = sinAplicar.filter(j => { const d=diasDesde(j); return d!==null && d>7; });
+
+            if(todos.length === 0) { alert('No hay jóvenes registrados.'); return; }
+
+            const wb = XLSX.utils.book_new();
+
+            // Hoja 1: Aplicados
+            XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(
+                aplicados.map((j,i) => ({
+                    'N°': i+1, 'Nombre': j.nombre||'', 'RUT': j.rut||'',
+                    'F. Ingreso EUE': fmt(j.fechaIngresoEUE),
+                    'F. Columbia': fmt(j.fechaColumbia),
+                    'Resultado': j.resultadoColumbia||'',
+                    'Situación EUE': j.situacionEUE||''
+                }))
+            ), 'Columbia Aplicados');
+
+            // Hoja 2: Pendientes
+            XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(
+                pendientes.map((j,i) => ({
+                    'N°': i+1, 'Nombre': j.nombre||'', 'RUT': j.rut||'',
+                    'F. Ingreso EUE': fmt(j.fechaIngresoEUE),
+                    'Días transcurridos': diasDesde(j)??'',
+                    'Estado': 'Dentro del plazo',
+                    'Situación EUE': j.situacionEUE||''
+                }))
+            ), 'Pendientes (dentro plazo)');
+
+            // Hoja 3: Vencidos
+            XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(
+                vencidos.map((j,i) => ({
+                    'N°': i+1, 'Nombre': j.nombre||'', 'RUT': j.rut||'',
+                    'F. Ingreso EUE': fmt(j.fechaIngresoEUE),
+                    'Días transcurridos': diasDesde(j)??'',
+                    'Estado': 'PLAZO VENCIDO',
+                    'Situación EUE': j.situacionEUE||''
+                }))
+            ), 'Plazo vencido');
+
+            XLSX.writeFile(wb, 'columbia_' + new Date().toISOString().split('T')[0] + '.xlsx');
+        }
+
+        function exportarColumbiaPDF() {
+            const { jsPDF } = window.jspdf;
+            const todos = [...jovenesVigentes];
+            const hoy = new Date(); hoy.setHours(0,0,0,0);
+            const diasDesde = j => {
+                if(!j.fechaIngresoEUE) return null;
+                const f = new Date(j.fechaIngresoEUE); f.setHours(0,0,0,0);
+                return Math.floor((hoy - f) / 86400000);
+            };
+            const fmt = d => { if(!d) return '—'; const [y,m,dia] = d.split('-'); return dia+'/'+m+'/'+y; };
+
+            const aplicados  = todos.filter(j => j.fechaColumbia && j.resultadoColumbia)
+                                    .sort((a,b) => new Date(b.fechaColumbia)-new Date(a.fechaColumbia));
+            const sinAplicar = todos.filter(j => !j.fechaColumbia || !j.resultadoColumbia);
+            const pendientes = sinAplicar.filter(j => { const d=diasDesde(j); return d!==null && d<=7; })
+                                         .sort((a,b) => new Date(a.fechaIngresoEUE)-new Date(b.fechaIngresoEUE));
+            const vencidos   = sinAplicar.filter(j => { const d=diasDesde(j); return d!==null && d>7; })
+                                         .sort((a,b) => new Date(a.fechaIngresoEUE)-new Date(b.fechaIngresoEUE));
+
+            const doc = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' });
+            const margin = 14, pageW = 297, colW = pageW - margin*2;
+            let y = 20;
+
+            // Encabezado
+            doc.setFillColor(118, 75, 162);
+            doc.rect(margin, y-6, colW, 12, 'F');
+            doc.setTextColor(255,255,255); doc.setFontSize(13); doc.setFont(undefined,'bold');
+            doc.text('Escala Columbia — Riesgo Suicida | LAE Los Ríos', margin+4, y+2);
+            doc.setFontSize(9); doc.setFont(undefined,'normal');
+            doc.text('Generado: '+new Date().toLocaleDateString('es-CL'), pageW-margin-42, y+2);
+            doc.setTextColor(0,0,0); y += 16;
+
+            // Resumen
+            doc.setFontSize(10); doc.setFont(undefined,'bold');
+            doc.text(`Total: ${todos.length}   |   Aplicados: ${aplicados.length}   |   Dentro del plazo: ${pendientes.length}   |   Plazo vencido: ${vencidos.length}`, margin, y);
+            doc.setFont(undefined,'normal'); y += 10;
+
+            const drawTableHeader = (cols, bgR, bgG, bgB) => {
+                doc.setFillColor(bgR, bgG, bgB);
+                doc.rect(margin, y-5, colW, 9, 'F');
+                doc.setTextColor(255,255,255); doc.setFontSize(8); doc.setFont(undefined,'bold');
+                cols.forEach(c => doc.text(c.label, c.x+1, y));
+                doc.setTextColor(0,0,0); doc.setFont(undefined,'normal');
+                y += 9;
+            };
+
+            const drawRow = (cols, vals, shade) => {
+                if(y > 185) { doc.addPage(); y = 20; }
+                doc.setFillColor(shade ? 245 : 255, shade ? 245 : 255, shade ? 247 : 255);
+                doc.rect(margin, y-4, colW, 7, 'F');
+                doc.setFontSize(8);
+                cols.forEach((c,i) => doc.text(String(vals[i]||'').substring(0,c.maxLen||40), c.x+1, y));
+                y += 7;
+            };
+
+            // --- Aplicados ---
+            if(aplicados.length > 0) {
+                doc.setFontSize(10); doc.setFont(undefined,'bold'); doc.setTextColor(118,75,162);
+                doc.text('✓ Instrumento Aplicado ('+aplicados.length+')', margin, y); y += 7;
+                doc.setTextColor(0,0,0);
+                const cols1 = [
+                    {label:'N°',    x:margin,     maxLen:4},
+                    {label:'Nombre',x:margin+10,  maxLen:28},
+                    {label:'RUT',   x:margin+75,  maxLen:14},
+                    {label:'F. Ingreso EUE', x:margin+110, maxLen:12},
+                    {label:'F. Columbia',    x:margin+145, maxLen:12},
+                    {label:'Resultado',      x:margin+180, maxLen:20},
+                    {label:'Situación EUE',  x:margin+230, maxLen:18},
+                ];
+                drawTableHeader(cols1, 118, 75, 162);
+                aplicados.forEach((j,i) => drawRow(cols1, [i+1, j.nombre, j.rut||'—', fmt(j.fechaIngresoEUE), fmt(j.fechaColumbia), j.resultadoColumbia||'—', j.situacionEUE||'—'], i%2!==0));
+                y += 6;
+            }
+
+            // --- Pendientes ---
+            if(pendientes.length > 0) {
+                if(y > 160) { doc.addPage(); y = 20; }
+                doc.setFontSize(10); doc.setFont(undefined,'bold'); doc.setTextColor(255,159,10);
+                doc.text('⏳ Dentro del plazo — pendiente aplicación ('+pendientes.length+')', margin, y); y += 7;
+                doc.setTextColor(0,0,0);
+                const cols2 = [
+                    {label:'N°',    x:margin,    maxLen:4},
+                    {label:'Nombre',x:margin+10, maxLen:35},
+                    {label:'RUT',   x:margin+90, maxLen:14},
+                    {label:'F. Ingreso EUE', x:margin+125, maxLen:12},
+                    {label:'Días transcurridos', x:margin+165, maxLen:8},
+                    {label:'Situación EUE', x:margin+210, maxLen:18},
+                ];
+                drawTableHeader(cols2, 255, 159, 10);
+                pendientes.forEach((j,i) => drawRow(cols2, [i+1, j.nombre, j.rut||'—', fmt(j.fechaIngresoEUE), diasDesde(j)??'—', j.situacionEUE||'—'], i%2!==0));
+                y += 6;
+            }
+
+            // --- Vencidos ---
+            if(vencidos.length > 0) {
+                if(y > 160) { doc.addPage(); y = 20; }
+                doc.setFontSize(10); doc.setFont(undefined,'bold'); doc.setTextColor(255,59,48);
+                doc.text('⚠ Plazo vencido — sin aplicar ('+vencidos.length+')', margin, y); y += 7;
+                doc.setTextColor(0,0,0);
+                const cols3 = [
+                    {label:'N°',    x:margin,    maxLen:4},
+                    {label:'Nombre',x:margin+10, maxLen:35},
+                    {label:'RUT',   x:margin+90, maxLen:14},
+                    {label:'F. Ingreso EUE', x:margin+125, maxLen:12},
+                    {label:'Días transcurridos', x:margin+165, maxLen:8},
+                    {label:'Situación EUE', x:margin+210, maxLen:18},
+                ];
+                drawTableHeader(cols3, 255, 59, 48);
+                vencidos.forEach((j,i) => drawRow(cols3, [i+1, j.nombre, j.rut||'—', fmt(j.fechaIngresoEUE), diasDesde(j)??'—', j.situacionEUE||'—'], i%2!==0));
+            }
+
+            doc.save('columbia_'+new Date().toISOString().split('T')[0]+'.pdf');
+        }
+
+        // ========== COLUMBIA PANEL ==========
+        function renderColumbiaPanel() {
+            const todos = [...jovenesVigentes];
+            const hoy = new Date();
+            hoy.setHours(0,0,0,0);
+            const formatDate = d => { if(!d) return ''; const [y,m,dia] = d.split('-'); return dia+'/'+m+'/'+y; };
+            const diasDesdeIngreso = j => {
+                if(!j.fechaIngresoEUE) return null;
+                const f = new Date(j.fechaIngresoEUE); f.setHours(0,0,0,0);
+                return Math.floor((hoy - f) / 86400000);
+            };
+            const conColumbia  = todos.filter(j => j.fechaColumbia && j.resultadoColumbia);
+            const sinColumbia  = todos.filter(j => !j.fechaColumbia || !j.resultadoColumbia);
+            const conPlazo     = sinColumbia.filter(j => { const d = diasDesdeIngreso(j); return d !== null && d <= 7; });
+            const vencidosPlazo= sinColumbia.filter(j => { const d = diasDesdeIngreso(j); return d !== null && d > 7; });
+            const sinFechaIngr = sinColumbia.filter(j => !j.fechaIngresoEUE);
+
+            const colorRiesgo = { 'Sin riesgo':'#28cd41', 'Riesgo bajo':'#ffd60a', 'Riesgo moderado':'#ff9f0a', 'Riesgo alto':'#ff3b30' };
+            const iconRiesgo  = { 'Sin riesgo':'✅', 'Riesgo bajo':'🟡', 'Riesgo moderado':'🟠', 'Riesgo alto':'🔴' };
+
+            const container = document.getElementById('columbiaList');
+            if(!container) return;
+
+            let html = '';
+
+            // Resumen badges
+            html += `<div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:18px;">
+                <div style="background:#764ba2;color:white;border-radius:12px;padding:10px 18px;font-size:13px;font-weight:600;">Total: ${todos.length}</div>
+                <div style="background:#28cd41;color:white;border-radius:12px;padding:10px 18px;font-size:13px;font-weight:600;">Aplicados: ${conColumbia.length}</div>
+                <div style="background:#ff9f0a;color:white;border-radius:12px;padding:10px 18px;font-size:13px;font-weight:600;">Dentro del plazo: ${conPlazo.length}</div>
+                <div style="background:#ff3b30;color:white;border-radius:12px;padding:10px 18px;font-size:13px;font-weight:600;">Plazo vencido: ${vencidosPlazo.length}</div>
+            </div>`;
+
+            // Tabla aplicados
+            if(conColumbia.length > 0) {
+                html += `<div style="margin-bottom:6px;font-size:13px;font-weight:700;color:#764ba2;"><i class="fas fa-check-circle"></i> Instrumento Aplicado (${conColumbia.length})</div>`;
+                html += `<table style="width:100%;border-collapse:collapse;font-size:13px;margin-bottom:20px;">
+                    <thead><tr style="background:#764ba2;color:white;">
+                        <th style="padding:9px 12px;text-align:left;border-radius:8px 0 0 0;">N°</th>
+                        <th style="padding:9px 12px;text-align:left;">Nombre</th>
+                        <th style="padding:9px 12px;text-align:left;">RUT</th>
+                        <th style="padding:9px 12px;text-align:left;">F. Ingreso EUE</th>
+                        <th style="padding:9px 12px;text-align:left;">F. Columbia</th>
+                        <th style="padding:9px 12px;text-align:left;border-radius:0 8px 0 0;">Resultado</th>
+                    </tr></thead><tbody>`;
+                conColumbia.sort((a,b) => new Date(b.fechaColumbia)-new Date(a.fechaColumbia)).forEach((j,i) => {
+                    const bg = i%2===0?'#ffffff':'#f5f5f7';
+                    const riesgo = j.resultadoColumbia || '';
+                    const col = colorRiesgo[riesgo] || '#888';
+                    html += `<tr style="background:${bg};cursor:pointer;" onclick="mostrarColumbiaDetalle('${j.id}')">
+                        <td style="padding:8px 12px;color:#888;">${i+1}</td>
+                        <td style="padding:8px 12px;font-weight:600;color:#1d1d1f;">${j.nombre}</td>
+                        <td style="padding:8px 12px;color:#555;">${j.rut||'—'}</td>
+                        <td style="padding:8px 12px;color:#555;">${formatDate(j.fechaIngresoEUE)}</td>
+                        <td style="padding:8px 12px;color:#764ba2;font-weight:600;">${formatDate(j.fechaColumbia)}</td>
+                        <td style="padding:8px 12px;"><span style="background:${col};color:${riesgo==='Riesgo bajo'?'#333':'white'};border-radius:8px;padding:3px 10px;font-size:12px;font-weight:600;">${iconRiesgo[riesgo]||''} ${riesgo}</span></td>
+                    </tr>`;
+                });
+                html += '</tbody></table>';
+            }
+
+            // Tabla pendientes (dentro del plazo)
+            if(conPlazo.length > 0) {
+                html += `<div style="margin-bottom:6px;font-size:13px;font-weight:700;color:#ff9f0a;"><i class="fas fa-clock"></i> Dentro del plazo — pendiente aplicación (${conPlazo.length})</div>`;
+                html += `<table style="width:100%;border-collapse:collapse;font-size:13px;margin-bottom:20px;">
+                    <thead><tr style="background:#ff9f0a;color:white;">
+                        <th style="padding:9px 12px;text-align:left;border-radius:8px 0 0 0;">N°</th>
+                        <th style="padding:9px 12px;text-align:left;">Nombre</th>
+                        <th style="padding:9px 12px;text-align:left;">RUT</th>
+                        <th style="padding:9px 12px;text-align:left;">F. Ingreso EUE</th>
+                        <th style="padding:9px 12px;text-align:left;border-radius:0 8px 0 0;">Días transcurridos</th>
+                    </tr></thead><tbody>`;
+                conPlazo.sort((a,b) => new Date(a.fechaIngresoEUE)-new Date(b.fechaIngresoEUE)).forEach((j,i) => {
+                    const bg = i%2===0?'#fffbf0':'#fff8e1';
+                    const dias = diasDesdeIngreso(j);
+                    html += `<tr style="background:${bg};">
+                        <td style="padding:8px 12px;color:#888;">${i+1}</td>
+                        <td style="padding:8px 12px;font-weight:600;color:#1d1d1f;">${j.nombre}</td>
+                        <td style="padding:8px 12px;color:#555;">${j.rut||'—'}</td>
+                        <td style="padding:8px 12px;color:#555;">${formatDate(j.fechaIngresoEUE)}</td>
+                        <td style="padding:8px 12px;"><span style="background:#ff9f0a;color:white;border-radius:8px;padding:3px 10px;font-size:12px;font-weight:600;">${dias} día(s)</span></td>
+                    </tr>`;
+                });
+                html += '</tbody></table>';
+            }
+
+            // Tabla plazo vencido
+            if(vencidosPlazo.length > 0) {
+                html += `<div style="margin-bottom:6px;font-size:13px;font-weight:700;color:#ff3b30;"><i class="fas fa-exclamation-circle"></i> Plazo vencido — sin aplicar (${vencidosPlazo.length})</div>`;
+                html += `<table style="width:100%;border-collapse:collapse;font-size:13px;margin-bottom:20px;">
+                    <thead><tr style="background:#ff3b30;color:white;">
+                        <th style="padding:9px 12px;text-align:left;border-radius:8px 0 0 0;">N°</th>
+                        <th style="padding:9px 12px;text-align:left;">Nombre</th>
+                        <th style="padding:9px 12px;text-align:left;">RUT</th>
+                        <th style="padding:9px 12px;text-align:left;">F. Ingreso EUE</th>
+                        <th style="padding:9px 12px;text-align:left;border-radius:0 8px 0 0;">Días transcurridos</th>
+                    </tr></thead><tbody>`;
+                vencidosPlazo.sort((a,b) => new Date(a.fechaIngresoEUE)-new Date(b.fechaIngresoEUE)).forEach((j,i) => {
+                    const bg = i%2===0?'#fff3f3':'#ffe8e8';
+                    const dias = diasDesdeIngreso(j);
+                    html += `<tr style="background:${bg};">
+                        <td style="padding:8px 12px;color:#888;">${i+1}</td>
+                        <td style="padding:8px 12px;font-weight:600;color:#1d1d1f;">${j.nombre}</td>
+                        <td style="padding:8px 12px;color:#555;">${j.rut||'—'}</td>
+                        <td style="padding:8px 12px;color:#555;">${formatDate(j.fechaIngresoEUE)}</td>
+                        <td style="padding:8px 12px;"><span style="background:#ff3b30;color:white;border-radius:8px;padding:3px 10px;font-size:12px;font-weight:600;">${dias} días — VENCIDO</span></td>
+                    </tr>`;
+                });
+                html += '</tbody></table>';
+            }
+
+            if(conColumbia.length === 0 && sinColumbia.length === 0) {
+                html += '<p style="text-align:center;color:#888;padding:20px;">No hay jóvenes registrados.</p>';
+            }
+
+            container.innerHTML = html;
+        }
+
+        function mostrarColumbiaDetalle(id) {
+            const j = jovenesVigentes.find(x => x.id === id);
+            if(!j) return;
+            const formatDate = d => { if(!d) return '—'; const [y,m,dia] = d.split('-'); return dia+'/'+m+'/'+y; };
+            const colorRiesgo = { 'Sin riesgo':'#28cd41','Riesgo bajo':'#ffd60a','Riesgo moderado':'#ff9f0a','Riesgo alto':'#ff3b30' };
+            const riesgo = j.resultadoColumbia || 'Sin aplicar';
+            const col = colorRiesgo[riesgo] || '#888';
+            document.getElementById('modalCrafftTitle').textContent = j.nombre + ' — Escala Columbia';
+            document.getElementById('modalCrafftContent').innerHTML = `
+                <div style="background:#f5f0ff;border-radius:12px;padding:16px;margin-bottom:14px;border:2px solid #764ba2;">
+                    <p style="margin:0 0 6px;font-size:12px;color:#888;font-weight:600;text-transform:uppercase;">Resultado Columbia</p>
+                    <span style="display:inline-block;background:${col};color:${riesgo==='Riesgo bajo'?'#333':'white'};border-radius:10px;padding:8px 18px;font-size:18px;font-weight:700;">${riesgo}</span>
+                </div>
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+                    <div style="background:#f5f5f7;border-radius:10px;padding:12px;">
+                        <p style="margin:0 0 4px;font-size:12px;color:#888;">Fecha Columbia</p>
+                        <p style="margin:0;font-weight:600;color:#764ba2;">${formatDate(j.fechaColumbia)}</p>
+                    </div>
+                    <div style="background:#f5f5f7;border-radius:10px;padding:12px;">
+                        <p style="margin:0 0 4px;font-size:12px;color:#888;">F. Ingreso EUE</p>
+                        <p style="margin:0;font-weight:500;">${formatDate(j.fechaIngresoEUE)}</p>
+                    </div>
+                    <div style="background:#f5f5f7;border-radius:10px;padding:12px;">
+                        <p style="margin:0 0 4px;font-size:12px;color:#888;">RUT</p>
+                        <p style="margin:0;font-weight:500;">${j.rut||'—'}</p>
+                    </div>
+                    <div style="background:#f5f5f7;border-radius:10px;padding:12px;">
+                        <p style="margin:0 0 4px;font-size:12px;color:#888;">Edad</p>
+                        <p style="margin:0;font-weight:500;">${j.edad||'—'} años</p>
+                    </div>
+                    <div style="background:#f5f5f7;border-radius:10px;padding:12px;">
+                        <p style="margin:0 0 4px;font-size:12px;color:#888;">Situación EUE</p>
+                        <p style="margin:0;font-weight:500;">${j.situacionEUE||'—'}</p>
+                    </div>
+                    <div style="background:#f5f5f7;border-radius:10px;padding:12px;">
+                        <p style="margin:0 0 4px;font-size:12px;color:#888;">Comuna</p>
+                        <p style="margin:0;font-weight:500;">${j.comuna||'—'}</p>
+                    </div>
+                </div>`;
+            document.getElementById('modalCrafft').style.display = 'flex';
+        }
+
         // ========== ORDENAR GRÁFICOS ==========
         const sortState = {};
         function sortChart(chartId) {
@@ -2886,6 +3274,9 @@
             addLine('Fecha CRAFFT/ASSIST', j.fechaCrafft);
             if (j.tuvoNecesidadUrgencia === 'Sí') {
                 addLine('Necesidad de urgencia al ingreso', 'SÍ — ' + (j.tipoNecesidadUrgencia || ''));
+                addLine('  Salud', j.urgenciaSalud || 'No');
+                addLine('  Maltrato Físico/Psicológico', j.urgenciaMaltrato || 'No');
+                addLine('  Abuso Sexual', j.urgenciaAbusoSexual || 'No');
             } else {
                 addLine('Necesidad de urgencia al ingreso', 'No');
             }
@@ -3028,11 +3419,197 @@
             // Hoja 7: Necesidades de urgencia
             const conUrgencia = todos.filter(j => j.tuvoNecesidadUrgencia === 'Sí');
             XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(
-                conUrgencia.map(j => ({ 'Nombre': j.nombre, 'RUT': j.rut||'', 'Tipo Necesidad': j.tipoNecesidadUrgencia||'', 'Situación EUE': j.situacionEUE||'' }))
+                conUrgencia.map(j => ({ 'Nombre': j.nombre, 'RUT': j.rut||'', 'Tipo Necesidad': j.tipoNecesidadUrgencia||'', 'Salud': j.urgenciaSalud||'No', 'Maltrato Físico/Psicológico': j.urgenciaMaltrato||'No', 'Abuso Sexual': j.urgenciaAbusoSexual||'No', 'Situación EUE': j.situacionEUE||'' }))
             ), "Necesidades Urgencia");
 
             XLSX.writeFile(wb, 'estadisticas_LAE_' + new Date().toISOString().split('T')[0] + '.xlsx');
         }
+
+        function exportarEstadisticasPDF() {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+            const todos = [...jovenesVigentes];
+            const activos = todos.filter(j => j.situacionEUE === 'Vigente' || j.situacionEUE === 'Ingreso sin contacto');
+            const total = activos.length;
+            let y = 20;
+            const margin = 18, colW = 210 - margin * 2;
+            const addTitle = (t) => {
+                doc.setFillColor(102, 126, 234);
+                doc.rect(margin, y - 5, colW, 10, 'F');
+                doc.setTextColor(255,255,255); doc.setFontSize(11); doc.setFont(undefined,'bold');
+                doc.text(t, margin+4, y+2);
+                doc.setTextColor(0,0,0); doc.setFont(undefined,'normal'); y += 12;
+            };
+            const addRow = (label, value, shade) => {
+                if(y > 270) { doc.addPage(); y = 20; }
+                if(shade) { doc.setFillColor(245,245,247); doc.rect(margin, y-4, colW, 8, 'F'); }
+                doc.setFontSize(10); doc.setFont(undefined,'bold');
+                doc.text(String(label), margin+2, y);
+                doc.setFont(undefined,'normal');
+                doc.text(String(value ?? '—'), margin+70, y);
+                y += 8;
+            };
+            doc.setFontSize(16); doc.setFont(undefined,'bold');
+            doc.text('Panel Estadístico — LAE Los Ríos', margin, y); y += 7;
+            doc.setFontSize(10); doc.setFont(undefined,'normal'); doc.setTextColor(100,100,100);
+            doc.text('Generado: ' + new Date().toLocaleDateString('es-CL'), margin, y);
+            doc.setTextColor(0,0,0); y += 10;
+            addTitle('RESUMEN GENERAL');
+            addRow('Total jóvenes activos', total, false);
+            addRow('Vigentes', todos.filter(j=>j.situacionEUE==='Vigente').length, true);
+            addRow('Ingreso sin contacto', todos.filter(j=>j.situacionEUE==='Ingreso sin contacto').length, false);
+            addRow('Egresados', jovenesNoVigentes.length, true);
+            y += 4;
+            addTitle('CATEGORÍAS DE SANCIÓN');
+            const cats = {'Menor a 1 año':0,'≥ 1 año':0,'≥ 2 años':0,'≥ 3 años':0,'Sin datos':0};
+            todos.filter(j=>j.situacionEUE==='Vigente').forEach(j=>{const c=getCategoriaSancionReal(j);cats[c]=(cats[c]||0)+1;});
+            Object.entries(cats).forEach(([k,v],i)=>addRow(k,v+(total>0?' ('+((v/total)*100).toFixed(1)+'%)':''),i%2===0));
+            y += 4;
+            addTitle('TIPOS DE DELITO');
+            const delitos={};
+            activos.forEach(j=>{if(j.tipoDelito1)delitos[j.tipoDelito1]=(delitos[j.tipoDelito1]||0)+1;});
+            Object.entries(delitos).sort((a,b)=>b[1]-a[1]).forEach(([k,v],i)=>addRow(k,v+(total>0?' ('+((v/total)*100).toFixed(1)+'%)':''),i%2===0));
+            y += 4;
+            addTitle('RANGO ETARIO');
+            const rangos={};
+            activos.forEach(j=>{if(j.rangoEtario)rangos[j.rangoEtario]=(rangos[j.rangoEtario]||0)+1;});
+            Object.entries(rangos).sort((a,b)=>b[1]-a[1]).forEach(([k,v],i)=>addRow(k,v+(total>0?' ('+((v/total)*100).toFixed(1)+'%)':''),i%2===0));
+            y += 4;
+            addTitle('TIPO DE FAMILIA');
+            const familias={};
+            activos.forEach(j=>{if(j.tipoFamilia)familias[j.tipoFamilia]=(familias[j.tipoFamilia]||0)+1;});
+            Object.entries(familias).sort((a,b)=>b[1]-a[1]).forEach(([k,v],i)=>addRow(k,v+(total>0?' ('+((v/total)*100).toFixed(1)+'%)':''),i%2===0));
+            y += 4;
+            if(y>230){doc.addPage();y=20;}
+            addTitle('NECESIDADES DE URGENCIA AL INGRESO');
+            const conUrgPDF=todos.filter(j=>j.tuvoNecesidadUrgencia==='Sí');
+            if(conUrgPDF.length===0){
+                doc.setFontSize(10); doc.text('Ningún joven registra necesidad de urgencia.',margin+2,y); y+=8;
+            } else {
+                doc.setFillColor(192,57,43); doc.setTextColor(255,255,255);
+                doc.rect(margin,y-4,colW,8,'F');
+                doc.setFontSize(9); doc.setFont(undefined,'bold');
+                doc.text('Nombre',margin+2,y); doc.text('Tipo',margin+52,y);
+                doc.text('Salud',margin+90,y); doc.text('Maltrato',margin+110,y);
+                doc.text('Ab.Sex.',margin+133,y); doc.text('EUE',margin+158,y);
+                doc.setTextColor(0,0,0); doc.setFont(undefined,'normal'); y+=9;
+                conUrgPDF.forEach((j,i)=>{
+                    if(y>270){doc.addPage();y=20;}
+                    if(i%2===0){doc.setFillColor(255,255,255);}else{doc.setFillColor(245,245,247);}
+                    doc.rect(margin,y-4,colW,7,'F');
+                    doc.setFontSize(8);
+                    doc.text((j.nombre||'').substring(0,25),margin+2,y);
+                    doc.text((j.tipoNecesidadUrgencia||'—').substring(0,16),margin+52,y);
+                    doc.text(j.urgenciaSalud||'No',margin+90,y);
+                    doc.text(j.urgenciaMaltrato||'No',margin+110,y);
+                    doc.text(j.urgenciaAbusoSexual||'No',margin+133,y);
+                    doc.text((j.situacionEUE||'—').substring(0,14),margin+158,y);
+                    y+=7;
+                });
+            }
+            doc.save('estadisticas_LAE_'+new Date().toISOString().split('T')[0]+'.pdf');
+        }
+
+        function exportarUrgenciaExcel() {
+            const conUrgencia = [...jovenesVigentes].filter(j => j.tuvoNecesidadUrgencia === 'Sí');
+            if (conUrgencia.length === 0) { alert('No hay jóvenes con necesidad de urgencia registrada.'); return; }
+            const wb = XLSX.utils.book_new();
+            const datos = conUrgencia.map((j, i) => ({
+                'N°': i + 1,
+                'Nombre': j.nombre || '',
+                'RUT': j.rut || '',
+                'Tipo de Necesidad': j.tipoNecesidadUrgencia || '',
+                'Salud': j.urgenciaSalud || 'No',
+                'Maltrato Físico/Psicológico': j.urgenciaMaltrato || 'No',
+                'Abuso Sexual': j.urgenciaAbusoSexual || 'No',
+                'Fecha Ingreso EUE': j.fechaIngresoEUE || '',
+                'Situación EUE': j.situacionEUE || ''
+            }));
+            XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(datos), 'Necesidades Urgencia');
+            XLSX.writeFile(wb, 'necesidades_urgencia_' + new Date().toISOString().split('T')[0] + '.xlsx');
+        }
+
+        function exportarUrgenciaPDF() {
+            const { jsPDF } = window.jspdf;
+            const conUrgencia = [...jovenesVigentes].filter(j => j.tuvoNecesidadUrgencia === 'Sí');
+            if (conUrgencia.length === 0) { alert('No hay jóvenes con necesidad de urgencia registrada.'); return; }
+            const doc = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' });
+            const margin = 14, pageW = 297, colW = pageW - margin * 2;
+            let y = 20;
+            // Título
+            doc.setFillColor(192, 57, 43);
+            doc.rect(margin, y - 6, colW, 12, 'F');
+            doc.setTextColor(255, 255, 255); doc.setFontSize(13); doc.setFont(undefined, 'bold');
+            doc.text('Necesidades de Urgencia al Ingreso — LAE Los Ríos', margin + 4, y + 2);
+            doc.setFontSize(10); doc.setFont(undefined, 'normal');
+            doc.text('Generado: ' + new Date().toLocaleDateString('es-CL'), pageW - margin - 40, y + 2);
+            doc.setTextColor(0, 0, 0);
+            y += 16;
+            doc.setFontSize(10);
+            doc.text('Total jóvenes con necesidad de urgencia: ' + conUrgencia.length, margin, y);
+            y += 10;
+            // Cabecera tabla
+            const cols = [
+                { label: 'N°',       x: margin,      w: 10  },
+                { label: 'Nombre',   x: margin+10,   w: 55  },
+                { label: 'RUT',      x: margin+65,   w: 28  },
+                { label: 'Tipo Necesidad', x: margin+93, w: 42 },
+                { label: 'Salud',    x: margin+135,  w: 18  },
+                { label: 'Maltrato Fís./Psic.', x: margin+153, w: 32 },
+                { label: 'Abuso Sexual', x: margin+185, w: 26 },
+                { label: 'F. Ingreso EUE', x: margin+211, w: 28 },
+                { label: 'Situación', x: margin+239, w: 30  }
+            ];
+            doc.setFillColor(192, 57, 43);
+            doc.rect(margin, y - 5, colW, 9, 'F');
+            doc.setTextColor(255, 255, 255); doc.setFontSize(8); doc.setFont(undefined, 'bold');
+            cols.forEach(c => doc.text(c.label, c.x + 1, y));
+            doc.setTextColor(0, 0, 0); doc.setFont(undefined, 'normal');
+            y += 9;
+            const fmt = d => { if (!d) return ''; const [yy,mm,dd] = d.split('-'); return dd+'/'+mm+'/'+yy; };
+            conUrgencia.forEach((j, i) => {
+                if (y > 185) { doc.addPage(); y = 20; }
+                if (i % 2 === 0) { doc.setFillColor(255, 255, 255); } else { doc.setFillColor(245, 245, 247); }
+                doc.rect(margin, y - 4, colW, 7, 'F');
+                doc.setFontSize(8);
+                doc.text(String(i + 1), cols[0].x + 1, y);
+                doc.text((j.nombre || '').substring(0, 28), cols[1].x + 1, y);
+                doc.text((j.rut || '').substring(0, 14), cols[2].x + 1, y);
+                doc.text((j.tipoNecesidadUrgencia || '—').substring(0, 20), cols[3].x + 1, y);
+                doc.text(j.urgenciaSalud || 'No', cols[4].x + 1, y);
+                doc.text(j.urgenciaMaltrato || 'No', cols[5].x + 1, y);
+                doc.text(j.urgenciaAbusoSexual || 'No', cols[6].x + 1, y);
+                doc.text(fmt(j.fechaIngresoEUE), cols[7].x + 1, y);
+                doc.text((j.situacionEUE || '').substring(0, 14), cols[8].x + 1, y);
+                y += 7;
+            });
+            doc.save('necesidades_urgencia_' + new Date().toISOString().split('T')[0] + '.pdf');
+        }
+
+        function doLogin() {
+            var errEl = document.getElementById('loginError');
+            try {
+                var pwd = document.getElementById('loginPasswordInput').value;
+                if(errEl) errEl.textContent = '';
+                if(pwd === ACCESS_PASSWORD) {
+                    document.getElementById('loginModal').classList.remove('show');
+                    document.getElementById('appContainer').style.display = 'flex';
+                    inicializarApp().catch(function(err){
+                        console.error('Error en inicializarApp:', err);
+                        if(errEl) errEl.textContent = 'Error al iniciar: ' + err.message;
+                    });
+                } else if(pwd === '') {
+                    if(errEl) errEl.textContent = 'Ingrese la contraseña';
+                } else {
+                    if(errEl) errEl.textContent = 'Contraseña incorrecta';
+                    document.getElementById('loginPasswordInput').select();
+                }
+            } catch(err) {
+                console.error('Error:', err);
+                if(errEl) errEl.textContent = 'Error: ' + err.message;
+            }
+        }
+        function verificarLogin() { doLogin(); }
     </script>
 </body>
 </html>
