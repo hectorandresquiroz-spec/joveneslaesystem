@@ -1110,6 +1110,8 @@
                                     <div class="form-group"><label>Género</label><select id="genero"><option value="">Seleccionar</option><option value="Femenino">Femenino</option><option value="Masculino">Masculino</option><option value="Otro">Otro</option></select></div>
                                     <div class="form-group"><label>Nacionalidad</label><input type="text" id="nacionalidad" value="Chilena"></div>
                                     <div class="form-group"><label>Situación EUE</label><select id="situacionEUE"><option value="">Seleccionar</option><option value="Vigente">Vigente</option><option value="Egresado">Egresado</option><option value="Ingreso sin contacto">Ingreso sin contacto</option></select></div>
+                                    <div class="form-group"><label>Fecha de egreso</label><input type="date" id="fechaEgresoReal"></div>
+                                    <div class="form-group"><label>Motivo de egreso</label><select id="motivoEgreso"><option value="">Seleccionar</option><option value="Suspensión">Suspensión</option><option value="Cumplimiento">Cumplimiento</option><option value="Remisión">Remisión</option><option value="Traslado">Traslado</option></select></div>
                                     <div class="form-group"><label>Edad ingreso</label><input type="number" id="edadIngreso"></div>
                                     <div class="form-group"><label>Rango etario</label><select id="rangoEtario"><option value="">Seleccionar</option><option value="14 a 15 años">14 a 15 años</option><option value="16 a 17 años">16 a 17 años</option><option value="18 a 21 años">18 a 21 años</option><option value="22 a 25 años">22 a 25 años</option><option value="Mayor de 25 años">Mayor de 25 años</option></select></div>
                                     <div class="form-group"><label>Pertenencia étnica</label><select id="pertenenciaEtnica"><option value="">Seleccionar</option><option value="Mapuche">Mapuche</option><option value="Aymara">Aymara</option><option value="Rapa Nui">Rapa Nui</option><option value="Ninguna">Ninguna</option></select></div>
@@ -1177,6 +1179,8 @@
                                 <div class="form-grid">
                                     <div class="form-group"><label>Tribunal origen</label><div class="select-with-add"><select id="tribunalOrigen"></select><button type="button" class="btn-small" onclick="agregarTribunal()"><i class="fas fa-plus"></i></button></div></div>
                                     <div class="form-group"><label>Tribunal ejecución</label><div class="select-with-add"><select id="tribunalEjecucion"></select><button type="button" class="btn-small" onclick="agregarTribunal()"><i class="fas fa-plus"></i></button></div></div>
+                                    <div class="form-group"><label>RIT causa</label><input type="text" id="ritCausa" placeholder="Ej: 123-2026"></div>
+                                    <div class="form-group"><label>RUC causa</label><input type="text" id="rucCausa" placeholder="Ej: 2600123456-7"></div>
                                     <div class="form-group"><label>Fecha derivación</label><input type="date" id="fechaDerivacion"></div>
                                     
                                     <!-- Delito 1 con botón -->
@@ -1609,9 +1613,17 @@
         function toggleField(c, v) { document.querySelectorAll(`.${c}`).forEach(e => e.style.display = v === 'Sí' ? 'block' : 'none'); }
         function toggleLaboralFields() { const v = document.getElementById('situacionLaboral').value; document.querySelectorAll('.laboral-field').forEach(e => e.style.display = (v === 'Trabajando' || v === 'Estudiante que trabaja') ? 'block' : 'none'); }
 
+        function calcularEdadActual(fechaNac) {
+            if (!fechaNac) return '';
+            const h = new Date(), n = new Date(fechaNac);
+            let e = h.getFullYear() - n.getFullYear();
+            if (h.getMonth() < n.getMonth() || (h.getMonth() === n.getMonth() && h.getDate() < n.getDate())) e--;
+            return e;
+        }
+
         function calcularEdad() {
             const f = document.getElementById('fechaNacimiento').value;
-            if (f) { const h = new Date(), n = new Date(f); let e = h.getFullYear() - n.getFullYear(); if (h.getMonth() < n.getMonth() || (h.getMonth() === n.getMonth() && h.getDate() < n.getDate())) e--; document.getElementById('edad').value = e; }
+            if (f) { document.getElementById('edad').value = calcularEdadActual(f); }
         }
 
         function calcularTiempoCumplido() {
@@ -1807,12 +1819,14 @@
             const sd = calcularDatosSancion(j);
             
             const fields = [
-                ['Nombre', j.nombre], ['RUT', j.rut], ['Edad', j.edad], ['Comuna', j.comuna], ['Situación EUE', j.situacionEUE],
+                ['Nombre', j.nombre], ['RUT', j.rut], ['Edad', calcularEdadActual(j.fechaNacimiento) || j.edad], ['Comuna', j.comuna], ['Situación EUE', j.situacionEUE],
                 ['Rango etario', j.rangoEtario], ['Tipo familia', j.tipoFamilia], ['Tribunal origen', j.tribunalOrigen],
+                ['RIT causa', j.ritCausa], ['RUC causa', j.rucCausa],
                 ['Delito principal', j.tipoDelito1], ['Causal ingreso', j.causalIngreso1], ['Fecha ingreso EUE', j.fechaIngresoEUE],
                 ['Sanción', formatSancionTexto(j)], ['Abono', (j.s1abono||0) + ' días'],
                 ['Total días sentencia', sd.totalDiasSentencia], ['Días cumplidos', sd.diasCumplidos], ['Días restantes', sd.diasRestantes],
-                ['Fecha egreso estimada', sd.fechaEgresoEstimada], ['Categoría sanción', getCategoriaSancionReal(j)]
+                ['Fecha egreso estimada', sd.fechaEgresoEstimada], ['Categoría sanción', getCategoriaSancionReal(j)],
+                ['Fecha de egreso', j.fechaEgresoReal], ['Motivo de egreso', j.motivoEgreso]
             ].filter(f => f[1] !== undefined && f[1] !== null && f[1] !== '').map(f => `<div class="detail-item"><span class="detail-label">${f[0]}</span><span class="detail-value">${f[1]}</span></div>`).join('');
             
             dc.innerHTML = `<div class="details-header"><div class="details-title"><h2>${j.nombre||''}</h2><p>${j.rut||''}</p></div><div class="details-actions"><button class="btn-edit" onclick="editJoven('${j.id}')"><i class="fas fa-edit"></i> Editar</button>${currentView==='vigentes'?`<button class="btn-danger" onclick="moveToNoVigente('${j.id}')"><i class="fas fa-archive"></i> No Vigente</button>`:`<button class="btn-primary" onclick="moveToVigente('${j.id}')"><i class="fas fa-undo"></i> Restaurar</button>`}<button class="btn-pdf" onclick="exportarPDF('${j.id}')"><i class="fas fa-file-pdf"></i> PDF</button><button class="btn-delete" onclick="requestDelete('${j.id}')"><i class="fas fa-trash"></i> Eliminar</button></div></div><div class="details-section"><h3>Información Principal</h3><div class="details-grid">${fields}</div></div>`;
@@ -1842,7 +1856,7 @@
             document.getElementById('formTitle').textContent = 'Editar Registro';
             
             // Cargar todos los campos del formulario
-            const campos = ['nombre','rut','fechaNacimiento','edad','genero','nacionalidad','situacionEUE','edadIngreso','rangoEtario','pertenenciaEtnica','ruralidad','tipoJoven','fechaIngresoEUE','comuna','direccion','telefono','email','nombrePadre','nombreMadre','tieneHijos','adultoCargo','relacionAdulto','tipoFamilia','educacionAdulto','ocupacionAdulto','contactoAdulto','viveCon','obsFamiliares','prevSalud','tramoFONASA','problemaSaludFisica','especificarSaludFisica','problemaSaludMental','especificarSaludMental','tomaMedicamentos','medicamentos','discapacidad','fechaCrafft','consumoDrogas','tipoConsumo','tipoDroga','institucionTratamiento','tipoAdherencia','simultaneidadSPE','especificarSPE','simultaneidadRPA','especificarRPA','obsSalud','tribunalOrigen','tribunalEjecucion','fechaDerivacion','tipoDelito1','causalIngreso1','tipoDelito2','causalIngreso2','tipoDelito3','causalIngreso3','s1anios','s1meses','s1dias','s1abono','obsJudiciales','nivelEducacional','ultimoCurso','estudiaActualmente','tipoEstablecimiento','nombreInstitucion','cursoNivel','jornada','obsEducacionales','situacionLaboral','tipoContrato','tipoTrabajo','ocupacion','empleador','obsLaborales','enProgramaProteccion','tipoPrograma','nombrePrograma','fechaIngresoPrograma','obsProteccion','tieneRSH','tramoRSH','ingresoFamiliar','integrantesHogar','ingresoPerCapita','tuvoNecesidadUrgencia','tipoNecesidadUrgencia','fechaAprobacionPlan','urgenciaSalud','urgenciaMaltrato','urgenciaAbusoSexual','fechaColumbia','resultadoColumbia'];
+            const campos = ['nombre','rut','fechaNacimiento','edad','genero','nacionalidad','situacionEUE','fechaEgresoReal','motivoEgreso','edadIngreso','rangoEtario','pertenenciaEtnica','ruralidad','tipoJoven','fechaIngresoEUE','comuna','direccion','telefono','email','nombrePadre','nombreMadre','tieneHijos','adultoCargo','relacionAdulto','tipoFamilia','educacionAdulto','ocupacionAdulto','contactoAdulto','viveCon','obsFamiliares','prevSalud','tramoFONASA','problemaSaludFisica','especificarSaludFisica','problemaSaludMental','especificarSaludMental','tomaMedicamentos','medicamentos','discapacidad','fechaCrafft','consumoDrogas','tipoConsumo','tipoDroga','institucionTratamiento','tipoAdherencia','simultaneidadSPE','especificarSPE','simultaneidadRPA','especificarRPA','obsSalud','tribunalOrigen','tribunalEjecucion','ritCausa','rucCausa','fechaDerivacion','tipoDelito1','causalIngreso1','tipoDelito2','causalIngreso2','tipoDelito3','causalIngreso3','s1anios','s1meses','s1dias','s1abono','obsJudiciales','nivelEducacional','ultimoCurso','estudiaActualmente','tipoEstablecimiento','nombreInstitucion','cursoNivel','jornada','obsEducacionales','situacionLaboral','tipoContrato','tipoTrabajo','ocupacion','empleador','obsLaborales','enProgramaProteccion','tipoPrograma','nombrePrograma','fechaIngresoPrograma','obsProteccion','tieneRSH','tramoRSH','ingresoFamiliar','integrantesHogar','ingresoPerCapita','tuvoNecesidadUrgencia','tipoNecesidadUrgencia','fechaAprobacionPlan','urgenciaSalud','urgenciaMaltrato','urgenciaAbusoSexual','fechaColumbia','resultadoColumbia'];
             
             campos.forEach(campo => {
                 const elemento = document.getElementById(campo);
@@ -1860,6 +1874,7 @@
             toggleField('estudio-field', j.estudiaActualmente);
             toggleLaboralFields();
             toggleField('proteccion-field', j.enProgramaProteccion);
+            calcularEdad();
             
             // Abrir el formulario
             document.getElementById('formContainer').style.display = 'block';
@@ -1880,11 +1895,14 @@
                 id: editingId || Date.now().toString() 
             };
             
-            const fields = ['nombre','rut','fechaNacimiento','edad','genero','nacionalidad','situacionEUE','edadIngreso','rangoEtario','pertenenciaEtnica','ruralidad','tipoJoven','fechaIngresoEUE','comuna','direccion','telefono','email','nombrePadre','nombreMadre','tieneHijos','adultoCargo','relacionAdulto','tipoFamilia','educacionAdulto','ocupacionAdulto','contactoAdulto','viveCon','obsFamiliares','prevSalud','tramoFONASA','problemaSaludFisica','especificarSaludFisica','problemaSaludMental','especificarSaludMental','tomaMedicamentos','medicamentos','discapacidad','fechaCrafft','consumoDrogas','tipoConsumo','tipoDroga','institucionTratamiento','tipoAdherencia','simultaneidadSPE','especificarSPE','simultaneidadRPA','especificarRPA','obsSalud','tribunalOrigen','tribunalEjecucion','fechaDerivacion','tipoDelito1','causalIngreso1','tipoDelito2','causalIngreso2','tipoDelito3','causalIngreso3','s1anios','s1meses','s1dias','s1abono','totalDiasSentencia','diasCumplidos','diasRestantes','fechaEgresoEstimada','obsJudiciales','nivelEducacional','ultimoCurso','estudiaActualmente','tipoEstablecimiento','nombreInstitucion','cursoNivel','jornada','obsEducacionales','situacionLaboral','tipoContrato','tipoTrabajo','ocupacion','empleador','obsLaborales','enProgramaProteccion','tipoPrograma','nombrePrograma','fechaIngresoPrograma','obsProteccion','tieneRSH','tramoRSH','ingresoFamiliar','integrantesHogar','ingresoPerCapita','tuvoNecesidadUrgencia','tipoNecesidadUrgencia','fechaAprobacionPlan','urgenciaSalud','urgenciaMaltrato','urgenciaAbusoSexual','fechaColumbia','resultadoColumbia'];            
+            const fields = ['nombre','rut','fechaNacimiento','edad','genero','nacionalidad','situacionEUE','fechaEgresoReal','motivoEgreso','edadIngreso','rangoEtario','pertenenciaEtnica','ruralidad','tipoJoven','fechaIngresoEUE','comuna','direccion','telefono','email','nombrePadre','nombreMadre','tieneHijos','adultoCargo','relacionAdulto','tipoFamilia','educacionAdulto','ocupacionAdulto','contactoAdulto','viveCon','obsFamiliares','prevSalud','tramoFONASA','problemaSaludFisica','especificarSaludFisica','problemaSaludMental','especificarSaludMental','tomaMedicamentos','medicamentos','discapacidad','fechaCrafft','consumoDrogas','tipoConsumo','tipoDroga','institucionTratamiento','tipoAdherencia','simultaneidadSPE','especificarSPE','simultaneidadRPA','especificarRPA','obsSalud','tribunalOrigen','tribunalEjecucion','ritCausa','rucCausa','fechaDerivacion','tipoDelito1','causalIngreso1','tipoDelito2','causalIngreso2','tipoDelito3','causalIngreso3','s1anios','s1meses','s1dias','s1abono','totalDiasSentencia','diasCumplidos','diasRestantes','fechaEgresoEstimada','obsJudiciales','nivelEducacional','ultimoCurso','estudiaActualmente','tipoEstablecimiento','nombreInstitucion','cursoNivel','jornada','obsEducacionales','situacionLaboral','tipoContrato','tipoTrabajo','ocupacion','empleador','obsLaborales','enProgramaProteccion','tipoPrograma','nombrePrograma','fechaIngresoPrograma','obsProteccion','tieneRSH','tramoRSH','ingresoFamiliar','integrantesHogar','ingresoPerCapita','tuvoNecesidadUrgencia','tipoNecesidadUrgencia','fechaAprobacionPlan','urgenciaSalud','urgenciaMaltrato','urgenciaAbusoSexual','fechaColumbia','resultadoColumbia'];            
             fields.forEach(f => { 
                 const el = document.getElementById(f); 
                 if (el) j[f] = el.value; 
             });
+            
+            // Recalcular siempre la edad desde la fecha de nacimiento para que nunca quede desactualizada
+            j.edad = calcularEdadActual(j.fechaNacimiento);
             
             j.categoriaSancion = getCategoriaSancionReal(j);
             
@@ -2655,7 +2673,7 @@
                     </div>
                     <div style="background:#f5f5f7; border-radius:10px; padding:12px;">
                         <p style="margin:0 0 4px 0; font-size:12px; color:#888;">Edad</p>
-                        <p style="margin:0; font-weight:500;">${j.edad||'—'} años</p>
+                        <p style="margin:0; font-weight:500;">${calcularEdadActual(j.fechaNacimiento)||j.edad||'—'} años</p>
                     </div>
                 </div>`;
             document.getElementById('modalCrafft').style.display = 'flex';
@@ -2994,7 +3012,7 @@
                     </div>
                     <div style="background:#f5f5f7;border-radius:10px;padding:12px;">
                         <p style="margin:0 0 4px;font-size:12px;color:#888;">Edad</p>
-                        <p style="margin:0;font-weight:500;">${j.edad||'—'} años</p>
+                        <p style="margin:0;font-weight:500;">${calcularEdadActual(j.fechaNacimiento)||j.edad||'—'} años</p>
                     </div>
                     <div style="background:#f5f5f7;border-radius:10px;padding:12px;">
                         <p style="margin:0 0 4px;font-size:12px;color:#888;">Situación EUE</p>
@@ -3040,7 +3058,7 @@
             document.getElementById('totalEgresados').textContent = egresados;
             
             const activos = todos.filter(j => j.situacionEUE === 'Vigente' || j.situacionEUE === 'Ingreso sin contacto');
-            const conEdad = activos.filter(j => j.edad).map(j => parseInt(j.edad));
+            const conEdad = activos.filter(j => j.fechaNacimiento || j.edad).map(j => parseInt(calcularEdadActual(j.fechaNacimiento) || j.edad));
             document.getElementById('promedioEdad').textContent = conEdad.length ? Math.round(conEdad.reduce((a,b) => a+b, 0) / conEdad.length) : 0;
 
             // Categorías por sanción: SOLO jóvenes con situación "Vigente"
@@ -3083,10 +3101,12 @@
                 'Nombre': j.nombre || '',
                 'RUT': j.rut || '',
                 'Fecha Nacimiento': j.fechaNacimiento || '',
-                'Edad': j.edad || '',
+                'Edad': calcularEdadActual(j.fechaNacimiento) || j.edad || '',
                 'Género': j.genero || '',
                 'Nacionalidad': j.nacionalidad || '',
                 'Situación EUE': j.situacionEUE || '',
+                'Fecha de Egreso': j.fechaEgresoReal || '',
+                'Motivo de Egreso': j.motivoEgreso || '',
                 'Edad Ingreso': j.edadIngreso || '',
                 'Rango Etario': j.rangoEtario || '',
                 'Pertenencia Étnica': j.pertenenciaEtnica || '',
@@ -3130,6 +3150,8 @@
                 'Obs. Salud': j.obsSalud || '',
                 'Tribunal Origen': j.tribunalOrigen || '',
                 'Tribunal Ejecución': j.tribunalEjecucion || '',
+                'RIT Causa': j.ritCausa || '',
+                'RUC Causa': j.rucCausa || '',
                 'Fecha Derivación': j.fechaDerivacion || '',
                 'Delito 1': j.tipoDelito1 || '',
                 'Causal 1': j.causalIngreso1 || '',
@@ -3226,10 +3248,12 @@
             addLine('Nombre', j.nombre);
             addLine('RUN/RUT', j.rut);
             addLine('Fecha Nacimiento', j.fechaNacimiento);
-            addLine('Edad', j.edad ? j.edad + ' años' : '');
+            addLine('Edad', calcularEdadActual(j.fechaNacimiento) ? calcularEdadActual(j.fechaNacimiento) + ' años' : (j.edad ? j.edad + ' años' : ''));
             addLine('Género', j.genero);
             addLine('Nacionalidad', j.nacionalidad);
             addLine('Situación EUE', j.situacionEUE);
+            addLine('Fecha de Egreso', j.fechaEgresoReal);
+            addLine('Motivo de Egreso', j.motivoEgreso);
             addLine('Edad Ingreso', j.edadIngreso);
             addLine('Rango Etario', j.rangoEtario);
             addLine('Pertenencia Étnica', j.pertenenciaEtnica);
@@ -3299,6 +3323,8 @@
             addSection('DATOS JUDICIALES');
             addLine('Tribunal Origen', j.tribunalOrigen);
             addLine('Tribunal Ejecución', j.tribunalEjecucion);
+            addLine('RIT Causa', j.ritCausa);
+            addLine('RUC Causa', j.rucCausa);
             addLine('Fecha Derivación', j.fechaDerivacion);
             addLine('Delito 1', j.tipoDelito1);
             addLine('Causal 1', j.causalIngreso1);
