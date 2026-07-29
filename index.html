@@ -667,6 +667,8 @@
             display: flex;
             align-items: center;
             justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 12px;
             margin-bottom: 20px;
             padding-bottom: 16px;
             border-bottom: 1px solid var(--apple-border);
@@ -680,7 +682,28 @@
 
         .details-actions {
             display: flex;
+            align-items: center;
+            flex-wrap: wrap;
             gap: 10px;
+        }
+
+        .fechas-resumen {
+            display: flex;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 6px;
+            margin-right: 4px;
+        }
+
+        .fecha-chip {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 10px;
+            border-radius: 8px;
+            font-size: 11.5px;
+            font-weight: 600;
+            white-space: nowrap;
         }
 
         .btn-danger {
@@ -1809,6 +1832,59 @@
             if (j) { selectedJoven = j; showDetails(j); renderList(); }
         }
 
+        function getResumenFechasJoven(j) {
+            const hoy = new Date(); hoy.setHours(12,0,0,0);
+            const fmtCorta = d => d ? (String(d.getDate()).padStart(2,'0') + '/' + String(d.getMonth()+1).padStart(2,'0') + '/' + d.getFullYear()) : '—';
+            const colorPorDias = dias => dias < 0 ? '#ff3b30' : dias <= 3 ? '#ff9f0a' : '#28cd41';
+            let html = '';
+
+            // Próximo informe de seguimiento
+            if (j.fechaAprobacionPlan) {
+                const informes = calcularInformesSeguimiento(j.fechaAprobacionPlan, j.fechaIngresoEUE, j.s1anios, j.s1meses, j.s1dias);
+                const proximo = (informes || []).filter(inf => inf.fecha >= hoy)[0];
+                if (proximo) {
+                    const dias = Math.round((proximo.fecha - hoy) / (1000*60*60*24));
+                    const c = colorPorDias(dias);
+                    html += `<span class="fecha-chip" style="background:${c}22;color:${c};border:1px solid ${c}55;" title="Próximo informe de seguimiento N°${proximo.numero}"><i class="fas fa-file-alt"></i> Informe N°${proximo.numero}: ${fmtCorta(proximo.fecha)}</span>`;
+                } else {
+                    html += `<span class="fecha-chip" style="background:#88888822;color:#666;border:1px solid #88888855;" title="Todos los informes de seguimiento fueron entregados"><i class="fas fa-file-alt"></i> Informes completados</span>`;
+                }
+            }
+
+            // Planes de intervención (inicial y profundizado)
+            if (j.fechaIngresoEUE) {
+                const fechas = calcularFechasPlan(j.fechaIngresoEUE);
+                if (fechas) {
+                    const diasInic = Math.round((fechas.inicial - hoy) / (1000*60*60*24));
+                    const diasProf = Math.round((fechas.profundizado - hoy) / (1000*60*60*24));
+                    const cInic = colorPorDias(diasInic);
+                    const cProf = colorPorDias(diasProf);
+                    html += `<span class="fecha-chip" style="background:${cInic}22;color:${cInic};border:1px solid ${cInic}55;" title="Fecha límite Plan de Intervención Inicial"><i class="fas fa-clipboard-list"></i> P. Inicial: ${fmtCorta(fechas.inicial)}</span>`;
+                    html += `<span class="fecha-chip" style="background:${cProf}22;color:${cProf};border:1px solid ${cProf}55;" title="Fecha límite Plan de Intervención Profundizado"><i class="fas fa-clipboard-check"></i> P. Profundizado: ${fmtCorta(fechas.profundizado)}</span>`;
+                }
+            }
+
+            // Fecha CRAFFT/ASSIST
+            const fmtSimple = f => { if (!f) return null; const [y,m,d] = f.split('-'); return `${d}/${m}/${y}`; };
+            if (j.fechaCrafft) {
+                html += `<span class="fecha-chip" style="background:#4facfe22;color:#0071e3;border:1px solid #4facfe55;" title="Fecha aplicación CRAFFT/ASSIST"><i class="fas fa-calendar-check"></i> CRAFFT/ASSIST: ${fmtSimple(j.fechaCrafft)}</span>`;
+            } else {
+                html += `<span class="fecha-chip" style="background:#ff3b3022;color:#ff3b30;border:1px solid #ff3b3055;" title="Sin fecha CRAFFT/ASSIST registrada"><i class="fas fa-calendar-check"></i> CRAFFT/ASSIST: sin registro</span>`;
+            }
+
+            // Fecha y resultado Columbia
+            const colorRiesgoCol = { 'Sin riesgo':'#28cd41', 'Riesgo bajo':'#c99a00', 'Riesgo moderado':'#ff9f0a', 'Riesgo alto':'#ff3b30' };
+            const iconRiesgoCol  = { 'Sin riesgo':'✅', 'Riesgo bajo':'🟡', 'Riesgo moderado':'🟠', 'Riesgo alto':'🔴' };
+            if (j.fechaColumbia && j.resultadoColumbia) {
+                const cCol = colorRiesgoCol[j.resultadoColumbia] || '#764ba2';
+                html += `<span class="fecha-chip" style="background:${cCol}22;color:${cCol};border:1px solid ${cCol}55;" title="Escala Columbia — Riesgo suicida"><i class="fas fa-brain"></i> Columbia: ${fmtSimple(j.fechaColumbia)} — ${iconRiesgoCol[j.resultadoColumbia]||''} ${j.resultadoColumbia}</span>`;
+            } else {
+                html += `<span class="fecha-chip" style="background:#ff3b3022;color:#ff3b30;border:1px solid #ff3b3055;" title="Sin escala Columbia registrada"><i class="fas fa-brain"></i> Columbia: sin registro</span>`;
+            }
+
+            return html;
+        }
+
         function showDetails(j) {
             document.getElementById('formContainer').style.display = 'none'; 
             document.getElementById('welcomeScreen').style.display = 'none';
@@ -1829,7 +1905,9 @@
                 ['Fecha de egreso', j.fechaEgresoReal], ['Motivo de egreso', j.motivoEgreso]
             ].filter(f => f[1] !== undefined && f[1] !== null && f[1] !== '').map(f => `<div class="detail-item"><span class="detail-label">${f[0]}</span><span class="detail-value">${f[1]}</span></div>`).join('');
             
-            dc.innerHTML = `<div class="details-header"><div class="details-title"><h2>${j.nombre||''}</h2><p>${j.rut||''}</p></div><div class="details-actions"><button class="btn-edit" onclick="editJoven('${j.id}')"><i class="fas fa-edit"></i> Editar</button>${currentView==='vigentes'?`<button class="btn-danger" onclick="moveToNoVigente('${j.id}')"><i class="fas fa-archive"></i> No Vigente</button>`:`<button class="btn-primary" onclick="moveToVigente('${j.id}')"><i class="fas fa-undo"></i> Restaurar</button>`}<button class="btn-pdf" onclick="exportarPDF('${j.id}')"><i class="fas fa-file-pdf"></i> PDF</button><button class="btn-delete" onclick="requestDelete('${j.id}')"><i class="fas fa-trash"></i> Eliminar</button></div></div><div class="details-section"><h3>Información Principal</h3><div class="details-grid">${fields}</div></div>`;
+            const resumenFechas = currentView === 'vigentes' ? getResumenFechasJoven(j) : '';
+
+            dc.innerHTML = `<div class="details-header"><div class="details-title"><h2>${j.nombre||''}</h2><p>${j.rut||''}</p></div><div class="details-actions"><button class="btn-edit" onclick="editJoven('${j.id}')"><i class="fas fa-edit"></i> Editar</button>${resumenFechas ? `<div class="fechas-resumen">${resumenFechas}</div>` : ''}${currentView==='vigentes'?`<button class="btn-danger" onclick="moveToNoVigente('${j.id}')"><i class="fas fa-archive"></i> No Vigente</button>`:`<button class="btn-primary" onclick="moveToVigente('${j.id}')"><i class="fas fa-undo"></i> Restaurar</button>`}<button class="btn-pdf" onclick="exportarPDF('${j.id}')"><i class="fas fa-file-pdf"></i> PDF</button><button class="btn-delete" onclick="requestDelete('${j.id}')"><i class="fas fa-trash"></i> Eliminar</button></div></div><div class="details-section"><h3>Información Principal</h3><div class="details-grid">${fields}</div></div>`;
         }
 
         function showNewForm() {
