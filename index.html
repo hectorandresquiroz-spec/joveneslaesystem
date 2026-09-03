@@ -390,6 +390,67 @@
             background-clip: text;
         }
 
+        .stats-tabs-nav {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin-bottom: 20px;
+            padding: 6px;
+            background: var(--apple-light-gray);
+            border-radius: 14px;
+        }
+
+        .stats-tabs-nav.is-pinned {
+            position: fixed;
+            z-index: 200;
+            margin-bottom: 0;
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+            border-radius: 0 0 14px 14px;
+        }
+
+        .stats-tab-btn {
+            display: flex;
+            align-items: center;
+            gap: 7px;
+            padding: 10px 16px;
+            border: none;
+            border-radius: 10px;
+            background: transparent;
+            color: #555;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            white-space: nowrap;
+        }
+
+        .stats-tab-btn:hover {
+            background: rgba(0, 0, 0, 0.04);
+        }
+
+        .stats-tab-btn.active {
+            background: white;
+            color: #1A4A8A;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .stats-tab-btn .tab-badge {
+            background: #ff3b30;
+            color: white;
+            border-radius: 10px;
+            padding: 1px 7px;
+            font-size: 11px;
+            font-weight: 700;
+        }
+
+        .stats-tab-panel {
+            display: none;
+        }
+
+        .stats-tab-panel.active {
+            display: block;
+        }
+
         .sort-btn {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
@@ -1004,6 +1065,16 @@
                         <div class="stat-card"><h3>Egresados</h3><div class="stat-number" id="totalEgresados">0</div></div>
                         <div class="stat-card"><h3>Promedio Edad</h3><div class="stat-number" id="promedioEdad">0</div></div>
                     </div>
+
+                    <div class="stats-tabs-nav" id="statsTabsNav">
+                        <button class="stats-tab-btn active" data-tab="resumen" onclick="switchStatsTab('resumen')"><i class="fas fa-chart-pie"></i> Resumen General</button>
+                        <button class="stats-tab-btn" data-tab="alertas" onclick="switchStatsTab('alertas')"><i class="fas fa-bell"></i> Alertas y Plazos</button>
+                        <button class="stats-tab-btn" data-tab="instrumentos" onclick="switchStatsTab('instrumentos')"><i class="fas fa-notes-medical"></i> Instrumentos de Salud</button>
+                    </div>
+                    <div id="statsTabsNavSpacer" style="display:none;"></div>
+
+                    <!-- ===== TAB: RESUMEN GENERAL ===== -->
+                    <div class="stats-tab-panel active" data-tab="resumen">
                     <div class="charts-container">
                         <div class="chart-box">
                             <h3><i class="fas fa-tag"></i> Categorías de Sanción <button class="sort-btn" onclick="sortChart('chartSanciones')"><i class="fas fa-sort-amount-down" id="iconSanciones"></i></button></h3>
@@ -1028,9 +1099,12 @@
                         <h3><i class="fas fa-chart-network"></i> Tipicidad Penal por Rango Etario</h3>
                         <canvas id="chartTipicidad"></canvas>
                     </div>
+                    </div>
 
+                    <!-- ===== TAB: ALERTAS Y PLAZOS ===== -->
+                    <div class="stats-tab-panel" data-tab="alertas">
                     <!-- INGRESO SIN CONTACTO -->
-                    <div class="chart-box" style="margin-top:20px; grid-column: 1 / -1; border:1.5px solid #ff9f0a;">
+                    <div class="chart-box" style="grid-column: 1 / -1; border:1.5px solid #ff9f0a;">
                         <h3 style="color:#b8660a;"><i class="fas fa-user-clock"></i> Jóvenes con Ingreso Sin Contacto</h3>
                         <div id="sinContactoList" style="width:100%;">
                             <div style="text-align:center; color:#888; padding:20px;">Cargando...</div>
@@ -1070,9 +1144,12 @@
                             <div style="text-align:center; color:#888; padding:20px;">Cargando...</div>
                         </div>
                     </div>
+                    </div>
 
+                    <!-- ===== TAB: INSTRUMENTOS DE SALUD ===== -->
+                    <div class="stats-tab-panel" data-tab="instrumentos">
                     <!-- CRAFFT/ASSIST Chart -->
-                    <div class="chart-box" style="margin-top:20px; grid-column: 1 / -1;">
+                    <div class="chart-box" style="grid-column: 1 / -1;">
                         <h3><i class="fas fa-calendar-check"></i> Fechas CRAFFT/ASSIST — del más antiguo al más reciente</h3>
                         <div id="crafftList" style="width:100%; overflow-x:auto;">
                             <div style="text-align:center; color:#888; padding:20px;">Cargando...</div>
@@ -1095,6 +1172,25 @@
                         <div id="columbiaList" style="width:100%; overflow-x:auto;">
                             <div style="text-align:center; color:#888; padding:20px;">Cargando...</div>
                         </div>
+                    </div>
+
+                    <!-- FERR Chart -->
+                    <div class="chart-box" style="margin-top:20px; grid-column: 1 / -1; border:2px solid #1A4A8A;">
+                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; flex-wrap:wrap; gap:10px;">
+                            <h3 style="color:#1A4A8A; margin:0;"><i class="fas fa-notes-medical"></i> FERR <span style="font-size:12px; font-weight:400; color:#888; margin-left:8px;">Plazo 45 días corridos desde ingreso efectivo</span></h3>
+                            <div style="display:flex; gap:8px;">
+                                <button onclick="exportarFerrExcel()" style="background:#28cd41; color:white; padding:7px 14px; border-radius:20px; border:none; font-weight:500; cursor:pointer; display:flex; align-items:center; gap:6px; font-size:13px;">
+                                    <i class="fas fa-file-excel"></i> Excel
+                                </button>
+                                <button onclick="exportarFerrPDF()" style="background:linear-gradient(135deg,#1A4A8A,#0d2a4d); color:white; padding:7px 14px; border-radius:20px; border:none; font-weight:500; cursor:pointer; display:flex; align-items:center; gap:6px; font-size:13px;">
+                                    <i class="fas fa-file-pdf"></i> PDF
+                                </button>
+                            </div>
+                        </div>
+                        <div id="ferrList" style="width:100%; overflow-x:auto;">
+                            <div style="text-align:center; color:#888; padding:20px;">Cargando...</div>
+                        </div>
+                    </div>
                     </div>
                 </div>
 
@@ -1183,6 +1279,13 @@
                                     <div class="form-group"><label>Fecha CRAFFT/ASSIST</label><input type="date" id="fechaCrafft"></div>
                                     <div class="form-group"><label>Fecha Columbia</label><input type="date" id="fechaColumbia"></div>
                                     <div class="form-group"><label>Resultado Columbia</label><select id="resultadoColumbia"><option value="">Sin aplicar</option><option value="Sin riesgo">Sin riesgo</option><option value="Riesgo bajo">Riesgo bajo</option><option value="Riesgo moderado">Riesgo moderado</option><option value="Riesgo alto">Riesgo alto</option></select></div>
+                                    <div class="form-group full-width" style="margin-top:6px;">
+                                        <label style="display:flex; justify-content:space-between; align-items:center;">
+                                            <span><i class="fas fa-notes-medical" style="margin-right:5px;color:#1A4A8A;"></i>FERR — Ficha de Evaluación de Riesgo <span style="font-weight:400; color:#888; font-size:11px;">(Entrada: plazo 45 días corridos desde ingreso efectivo)</span></span>
+                                            <button type="button" class="btn-small" onclick="agregarFerrRow()"><i class="fas fa-plus"></i> Agregar FERR</button>
+                                        </label>
+                                        <div id="ferrRowsContainer" style="display:flex; flex-direction:column; gap:8px; margin-top:8px;"></div>
+                                    </div>
                                     <div class="form-group"><label>¿Consumo drogas?</label><select id="consumoDrogas" onchange="toggleField('drogas-field', this.value)"><option value="No">No</option><option value="Sí">Sí</option></select></div>
                                     <div class="form-group drogas-field" style="display:none;"><label>Tipo consumo</label><select id="tipoConsumo"><option value="">Seleccionar</option><option value="Habitual">Habitual</option><option value="Problemático">Problemático</option><option value="Ocasional">Ocasional</option><option value="Sin consumo">Sin consumo</option></select></div>
                                     <div class="form-group drogas-field" style="display:none;"><label>Tipo de droga</label><input type="text" id="tipoDroga"></div>
@@ -1476,6 +1579,116 @@
             }
         }
 
+        // ========== FUNCIONES PARA FILAS DINÁMICAS DE FERR ==========
+        function agregarFerrRow(tipo, fecha, riesgo) {
+            const container = document.getElementById('ferrRowsContainer');
+            if (!container) return;
+            const row = document.createElement('div');
+            row.className = 'ferr-row';
+            row.style.cssText = 'display:grid; grid-template-columns:1fr 1fr 1fr auto; gap:8px; align-items:end; background:#f5f5f7; padding:10px; border-radius:8px;';
+            row.innerHTML = `
+                <div><label style="display:block; font-size:11px; color:#888; margin-bottom:3px;">Tipo FERR</label>
+                    <select class="ferrTipo" style="width:100%; border:1px solid #ddd; border-radius:6px; padding:6px 8px; font-size:13px;">
+                        <option value="Entrada">Entrada</option>
+                        <option value="Intermedia">Intermedia</option>
+                        <option value="Salida">Salida</option>
+                    </select>
+                </div>
+                <div><label style="display:block; font-size:11px; color:#888; margin-bottom:3px;">Fecha aplicación</label>
+                    <input type="date" class="ferrFecha" style="width:100%; border:1px solid #ddd; border-radius:6px; padding:6px 8px; font-size:13px;">
+                </div>
+                <div><label style="display:block; font-size:11px; color:#888; margin-bottom:3px;">Nivel de riesgo</label>
+                    <select class="ferrRiesgo" style="width:100%; border:1px solid #ddd; border-radius:6px; padding:6px 8px; font-size:13px;">
+                        <option value="">Sin definir</option>
+                        <option value="Bajo">Bajo</option>
+                        <option value="Intermedio">Intermedio</option>
+                        <option value="Alto">Alto</option>
+                    </select>
+                </div>
+                <button type="button" onclick="this.closest('.ferr-row').remove()" style="background:#ff3b30; color:white; border:none; border-radius:6px; width:32px; height:32px; cursor:pointer; font-size:14px;">✕</button>
+            `;
+            container.appendChild(row);
+            if (tipo) row.querySelector('.ferrTipo').value = tipo;
+            if (fecha) row.querySelector('.ferrFecha').value = fecha;
+            if (riesgo) row.querySelector('.ferrRiesgo').value = riesgo;
+        }
+
+        function poblarFerrRows(ferrs) {
+            const container = document.getElementById('ferrRowsContainer');
+            if (!container) return;
+            container.innerHTML = '';
+            (ferrs || []).forEach(f => agregarFerrRow(f.tipo, f.fecha, f.riesgo));
+        }
+
+        function recolectarFerrs() {
+            return Array.from(document.querySelectorAll('#ferrRowsContainer .ferr-row')).map(row => ({
+                tipo: row.querySelector('.ferrTipo').value,
+                fecha: row.querySelector('.ferrFecha').value,
+                riesgo: row.querySelector('.ferrRiesgo').value
+            })).filter(f => f.fecha || f.riesgo);
+        }
+
+        // Determina, según la duración de la sanción, cuántos y cuáles FERR corresponden:
+        // 1 FERR por cada año de sanción — año 1 = Entrada, último año = Salida, años del medio = Intermedia.
+        // Sanciones ≤ 1 año: Entrada + Salida (sin Intermedia).
+        function calcularEsquemaFerr(j) {
+            const anios = parseInt(j.s1anios) || 0;
+            const meses = parseInt(j.s1meses) || 0;
+            const dias  = parseInt(j.s1dias)  || 0;
+            const abono = parseInt(j.s1abono) || 0;
+            const totalBruto = (anios * 365) + (meses * 30) + dias;
+            const diasEfectivos = Math.max(0, totalBruto - abono);
+            if (diasEfectivos <= 0) return { aniosSancion: 0, requeridos: [], diasEfectivos: 0 };
+
+            const aniosSancion = Math.max(1, Math.ceil(diasEfectivos / 365));
+            let requeridos;
+            if (aniosSancion <= 1) {
+                requeridos = ['Entrada', 'Salida'];
+            } else {
+                requeridos = ['Entrada'];
+                for (let i = 2; i < aniosSancion; i++) requeridos.push('Intermedia');
+                requeridos.push('Salida');
+            }
+            return { aniosSancion, requeridos, diasEfectivos };
+        }
+
+        // Calcula el estado del esquema FERR de un joven (aplicados vs requeridos, plazo de la Entrada)
+        function calcularEstadoFerr(j) {
+            const esquema = calcularEsquemaFerr(j);
+            const ferrs = j.ferrs || [];
+            const entradaReg = ferrs.find(f => f.tipo === 'Entrada');
+            const intermediaRegs = ferrs.filter(f => f.tipo === 'Intermedia');
+            const salidaReg = ferrs.find(f => f.tipo === 'Salida');
+
+            const entradaRequerida = esquema.requeridos.includes('Entrada');
+            const intermediasRequeridas = esquema.requeridos.filter(t => t === 'Intermedia').length;
+            const salidaRequerida = esquema.requeridos.includes('Salida');
+
+            let diasDesdeIngreso = null;
+            if (j.fechaIngresoEUE) {
+                const hoy = new Date(); hoy.setHours(0,0,0,0);
+                const f = new Date(j.fechaIngresoEUE); f.setHours(0,0,0,0);
+                diasDesdeIngreso = Math.floor((hoy - f) / 86400000);
+            }
+
+            const entradaVencida = entradaRequerida && !entradaReg && diasDesdeIngreso !== null && diasDesdeIngreso > 45;
+            const entradaPendiente = entradaRequerida && !entradaReg && diasDesdeIngreso !== null && diasDesdeIngreso <= 45;
+
+            const completo = (!entradaRequerida || !!entradaReg) &&
+                              intermediaRegs.length >= intermediasRequeridas &&
+                              (!salidaRequerida || !!salidaReg);
+
+            // Riesgo más reciente registrado (por fecha)
+            const conFecha = ferrs.filter(f => f.riesgo && f.fecha).sort((a,b) => new Date(b.fecha) - new Date(a.fecha));
+            const riesgoActual = conFecha.length ? conFecha[0].riesgo : null;
+
+            return {
+                esquema, entradaReg, intermediaRegs, salidaReg,
+                entradaRequerida, intermediasRequeridas, salidaRequerida,
+                diasDesdeIngreso, entradaVencida, entradaPendiente, completo, riesgoActual
+            };
+        }
+
         function cargarTiposDelitoPersonalizados() {
             const guardados = localStorage.getItem('categoriasDelitosPersonalizadas');
             if (guardados) {
@@ -1635,6 +1848,16 @@
 
         function toggleField(c, v) { document.querySelectorAll(`.${c}`).forEach(e => e.style.display = v === 'Sí' ? 'block' : 'none'); }
         function toggleLaboralFields() { const v = document.getElementById('situacionLaboral').value; document.querySelectorAll('.laboral-field').forEach(e => e.style.display = (v === 'Trabajando' || v === 'Estudiante que trabaja') ? 'block' : 'none'); }
+
+        // Convierte 'YYYY-MM-DD' o timestamps ISO ('YYYY-MM-DDTHH:mm:ss.sssZ') a 'DD/MM/YYYY'
+        function fmtDDMMYYYY(str) {
+            if (!str) return '';
+            const soloFecha = String(str).split('T')[0];
+            const partes = soloFecha.split('-');
+            if (partes.length !== 3) return str;
+            const [y, m, d] = partes;
+            return `${d}/${m}/${y}`;
+        }
 
         function calcularEdadActual(fechaNac) {
             if (!fechaNac) return '';
@@ -1898,11 +2121,11 @@
                 ['Nombre', j.nombre], ['RUT', j.rut], ['Edad', calcularEdadActual(j.fechaNacimiento) || j.edad], ['Comuna', j.comuna], ['Situación EUE', j.situacionEUE],
                 ['Rango etario', j.rangoEtario], ['Tipo familia', j.tipoFamilia], ['Tribunal origen', j.tribunalOrigen],
                 ['RIT causa', j.ritCausa], ['RUC causa', j.rucCausa],
-                ['Delito principal', j.tipoDelito1], ['Causal ingreso', j.causalIngreso1], ['Fecha ingreso EUE', j.fechaIngresoEUE],
+                ['Delito principal', j.tipoDelito1], ['Causal ingreso', j.causalIngreso1], ['Fecha ingreso EUE', fmtDDMMYYYY(j.fechaIngresoEUE)],
                 ['Sanción', formatSancionTexto(j)], ['Abono', (j.s1abono||0) + ' días'],
                 ['Total días sentencia', sd.totalDiasSentencia], ['Días cumplidos', sd.diasCumplidos], ['Días restantes', sd.diasRestantes],
-                ['Fecha egreso estimada', sd.fechaEgresoEstimada], ['Categoría sanción', getCategoriaSancionReal(j)],
-                ['Fecha de egreso', j.fechaEgresoReal], ['Motivo de egreso', j.motivoEgreso]
+                ['Fecha egreso estimada', fmtDDMMYYYY(sd.fechaEgresoEstimada)], ['Categoría sanción', getCategoriaSancionReal(j)],
+                ['Fecha de egreso', fmtDDMMYYYY(j.fechaEgresoReal)], ['Motivo de egreso', j.motivoEgreso]
             ].filter(f => f[1] !== undefined && f[1] !== null && f[1] !== '').map(f => `<div class="detail-item"><span class="detail-label">${f[0]}</span><span class="detail-value">${f[1]}</span></div>`).join('');
             
             const resumenFechas = currentView === 'vigentes' ? getResumenFechasJoven(j) : '';
@@ -1923,6 +2146,7 @@
             document.querySelectorAll('.salud-fisica-field, .salud-mental-field, .drogas-field, .spe-field, .rpa-field, .estudio-field, .laboral-field, .proteccion-field').forEach(e => e.style.display = 'none');
             ['catMenor1','catMayorIgual1','catMayorIgual2','catMayorIgual3'].forEach(b => { const el = document.getElementById(b); if (el) el.style.background = '#86868b'; });
             actualizarSelectsTipoDelito();
+            poblarFerrRows([]);
         }
 
         function editJoven(id) {
@@ -1953,6 +2177,13 @@
             toggleLaboralFields();
             toggleField('proteccion-field', j.enProgramaProteccion);
             calcularEdad();
+
+            // Cargar registros FERR (migra el campo antiguo "fechaFerr" si existiera)
+            let ferrsExistentes = j.ferrs || [];
+            if (!ferrsExistentes.length && j.fechaFerr) {
+                ferrsExistentes = [{ tipo: 'Entrada', fecha: j.fechaFerr, riesgo: '' }];
+            }
+            poblarFerrRows(ferrsExistentes);
             
             // Abrir el formulario
             document.getElementById('formContainer').style.display = 'block';
@@ -1983,6 +2214,9 @@
             j.edad = calcularEdadActual(j.fechaNacimiento);
             
             j.categoriaSancion = getCategoriaSancionReal(j);
+
+            // Recolectar registros FERR (Entrada / Intermedia / Salida)
+            j.ferrs = recolectarFerrs();
             
             // Recalcular siempre los campos de sanción desde los datos fuente antes de guardar
             const sd = calcularDatosSancion(j);
@@ -2119,7 +2353,14 @@
             document.getElementById('welcomeScreen').style.display = 'none'; 
             document.getElementById('formContainer').style.display = 'none'; 
             document.getElementById('detailsContainer').style.display = 'none';
-            if (d.classList.contains('show')) { actualizarDashboard(); renderSinContacto(); renderNecesidadesUrgencia(); renderInformesSeguimiento(); renderPlanesIntervencion(); renderCrafftPanel(); renderColumbiaPanel(); }
+            if (d.classList.contains('show')) {
+                actualizarDashboard(); renderSinContacto(); renderNecesidadesUrgencia(); renderInformesSeguimiento(); renderPlanesIntervencion(); renderCrafftPanel(); renderColumbiaPanel(); renderFerrPanel();
+                switchStatsTab('resumen');
+                setTimeout(initStatsTabsSticky, 50);
+            } else {
+                despinStatsTabsNav();
+                statsTabsThreshold = null;
+            }
         }
 
 
@@ -3104,8 +3345,312 @@
             document.getElementById('modalCrafft').style.display = 'flex';
         }
 
+        // ========== FERR EXPORTS ==========
+        function exportarFerrExcel() {
+            const todos = [...jovenesVigentes];
+            const fmt = d => { if(!d) return ''; const [y,m,dia] = d.split('-'); return dia+'/'+m+'/'+y; };
+
+            const conEsquema = todos.filter(j => calcularEsquemaFerr(j).requeridos.length > 0);
+            const estados = conEsquema.map(j => ({ j, e: calcularEstadoFerr(j) }));
+
+            const vencidos   = estados.filter(x => x.e.entradaVencida);
+            const completos  = estados.filter(x => x.e.completo);
+            const enProceso  = estados.filter(x => !x.e.entradaVencida && !x.e.completo);
+
+            if(todos.length === 0) { alert('No hay jóvenes registrados.'); return; }
+
+            const filaDe = x => ({
+                'Nombre': x.j.nombre||'', 'RUT': x.j.rut||'',
+                'F. Ingreso EUE': fmt(x.j.fechaIngresoEUE),
+                'Sanción': formatSancionTexto(x.j),
+                'Entrada': x.e.entradaReg ? fmt(x.e.entradaReg.fecha) + (x.e.entradaReg.riesgo ? ' — Riesgo '+x.e.entradaReg.riesgo : '') : (x.e.entradaVencida ? 'VENCIDA' : (x.e.entradaRequerida ? 'Pendiente' : 'No requerida')),
+                'Intermedia(s)': x.e.intermediasRequeridas ? `${x.e.intermediaRegs.length}/${x.e.intermediasRequeridas}` : 'No requerida',
+                'Salida': x.e.salidaReg ? fmt(x.e.salidaReg.fecha) + (x.e.salidaReg.riesgo ? ' — Riesgo '+x.e.salidaReg.riesgo : '') : (x.e.salidaRequerida ? 'Pendiente' : 'No requerida'),
+                'Riesgo actual': x.e.riesgoActual || '',
+                'Situación EUE': x.j.situacionEUE||''
+            });
+
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(vencidos.map(filaDe)), 'Entrada vencida');
+            XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(enProceso.map(filaDe)), 'En proceso');
+            XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(completos.map(filaDe)), 'Esquema completo');
+
+            XLSX.writeFile(wb, 'ferr_' + new Date().toISOString().split('T')[0] + '.xlsx');
+        }
+
+        function exportarFerrPDF() {
+            const { jsPDF } = window.jspdf;
+            const todos = [...jovenesVigentes];
+            const fmt = d => { if(!d) return '—'; const [y,m,dia] = d.split('-'); return dia+'/'+m+'/'+y; };
+
+            const conEsquema = todos.filter(j => calcularEsquemaFerr(j).requeridos.length > 0);
+            const estados = conEsquema.map(j => ({ j, e: calcularEstadoFerr(j) }));
+
+            const vencidos   = estados.filter(x => x.e.entradaVencida).sort((a,b) => new Date(a.j.fechaIngresoEUE)-new Date(b.j.fechaIngresoEUE));
+            const completos  = estados.filter(x => x.e.completo);
+            const enProceso  = estados.filter(x => !x.e.entradaVencida && !x.e.completo).sort((a,b) => new Date(a.j.fechaIngresoEUE)-new Date(b.j.fechaIngresoEUE));
+
+            const doc = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' });
+            const margin = 14, pageW = 297, colW = pageW - margin*2;
+            let y = 20;
+
+            doc.setFillColor(26, 74, 138);
+            doc.rect(margin, y-6, colW, 12, 'F');
+            doc.setTextColor(255,255,255); doc.setFontSize(13); doc.setFont(undefined,'bold');
+            doc.text('FERR — Ficha de Evaluación de Riesgo | LAE Los Ríos', margin+4, y+2);
+            doc.setFontSize(9); doc.setFont(undefined,'normal');
+            doc.text('Generado: '+new Date().toLocaleDateString('es-CL'), pageW-margin-42, y+2);
+            doc.setTextColor(0,0,0); y += 16;
+
+            doc.setFontSize(10); doc.setFont(undefined,'bold');
+            doc.text(`Total con esquema FERR: ${estados.length}   |   Entrada vencida: ${vencidos.length}   |   En proceso: ${enProceso.length}   |   Completos: ${completos.length}`, margin, y);
+            doc.setFont(undefined,'normal'); y += 10;
+
+            const drawTableHeader = (cols, bgR, bgG, bgB) => {
+                doc.setFillColor(bgR, bgG, bgB);
+                doc.rect(margin, y-5, colW, 9, 'F');
+                doc.setTextColor(255,255,255); doc.setFontSize(8); doc.setFont(undefined,'bold');
+                cols.forEach(c => doc.text(c.label, c.x+1, y));
+                doc.setTextColor(0,0,0); doc.setFont(undefined,'normal');
+                y += 9;
+            };
+
+            const drawRow = (cols, vals, shade) => {
+                if(y > 185) { doc.addPage(); y = 20; }
+                doc.setFillColor(shade ? 245 : 255, shade ? 245 : 255, shade ? 247 : 255);
+                doc.rect(margin, y-4, colW, 7, 'F');
+                doc.setFontSize(8);
+                cols.forEach((c,i) => doc.text(String(vals[i]||'').substring(0,c.maxLen||40), c.x+1, y));
+                y += 7;
+            };
+
+            const cols = [
+                {label:'Nombre',   x:margin,     maxLen:28},
+                {label:'RUT',      x:margin+55,  maxLen:14},
+                {label:'F. Ingreso EUE', x:margin+90, maxLen:12},
+                {label:'Sanción',  x:margin+125, maxLen:16},
+                {label:'Entrada',  x:margin+165, maxLen:22},
+                {label:'Intermedia(s)', x:margin+210, maxLen:8},
+                {label:'Salida',   x:margin+240, maxLen:22},
+            ];
+            const filaVals = x => [
+                x.j.nombre, x.j.rut||'—', fmt(x.j.fechaIngresoEUE), formatSancionTexto(x.j),
+                x.e.entradaReg ? fmt(x.e.entradaReg.fecha) : (x.e.entradaVencida ? 'VENCIDA' : (x.e.entradaRequerida ? 'Pendiente' : '—')),
+                x.e.intermediasRequeridas ? `${x.e.intermediaRegs.length}/${x.e.intermediasRequeridas}` : '—',
+                x.e.salidaReg ? fmt(x.e.salidaReg.fecha) : (x.e.salidaRequerida ? 'Pendiente' : '—')
+            ];
+
+            if(vencidos.length > 0) {
+                doc.setFontSize(10); doc.setFont(undefined,'bold'); doc.setTextColor(255,59,48);
+                doc.text('⚠ Entrada vencida ('+vencidos.length+')', margin, y); y += 7;
+                doc.setTextColor(0,0,0);
+                drawTableHeader(cols, 255, 59, 48);
+                vencidos.forEach((x,i) => drawRow(cols, filaVals(x), i%2!==0));
+                y += 6;
+            }
+
+            if(enProceso.length > 0) {
+                if(y > 160) { doc.addPage(); y = 20; }
+                doc.setFontSize(10); doc.setFont(undefined,'bold'); doc.setTextColor(255,159,10);
+                doc.text('⏳ En proceso ('+enProceso.length+')', margin, y); y += 7;
+                doc.setTextColor(0,0,0);
+                drawTableHeader(cols, 255, 159, 10);
+                enProceso.forEach((x,i) => drawRow(cols, filaVals(x), i%2!==0));
+                y += 6;
+            }
+
+            if(completos.length > 0) {
+                if(y > 160) { doc.addPage(); y = 20; }
+                doc.setFontSize(10); doc.setFont(undefined,'bold'); doc.setTextColor(26,74,138);
+                doc.text('✓ Esquema completo ('+completos.length+')', margin, y); y += 7;
+                doc.setTextColor(0,0,0);
+                drawTableHeader(cols, 26, 74, 138);
+                completos.forEach((x,i) => drawRow(cols, filaVals(x), i%2!==0));
+            }
+
+            doc.save('ferr_'+new Date().toISOString().split('T')[0]+'.pdf');
+        }
+
+        // ========== FERR PANEL ==========
+        function renderFerrPanel() {
+            const todos = [...jovenesVigentes];
+            const formatDate = d => { if(!d) return ''; const [y,m,dia] = d.split('-'); return dia+'/'+m+'/'+y; };
+            const colorRiesgoFerr = { 'Bajo':'#28cd41', 'Intermedio':'#ff9f0a', 'Alto':'#ff3b30' };
+            const iconRiesgoFerr  = { 'Bajo':'🟢', 'Intermedio':'🟠', 'Alto':'🔴' };
+
+            const conEsquema = todos.filter(j => calcularEsquemaFerr(j).requeridos.length > 0);
+            const estados = conEsquema.map(j => ({ j, e: calcularEstadoFerr(j) }));
+
+            const vencidos   = estados.filter(x => x.e.entradaVencida);
+            const completos  = estados.filter(x => x.e.completo);
+            const enProceso  = estados.filter(x => !x.e.entradaVencida && !x.e.completo);
+
+            const container = document.getElementById('ferrList');
+            if(!container) return;
+
+            let html = '';
+
+            html += `<div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:18px;">
+                <div style="background:#1A4A8A;color:white;border-radius:12px;padding:10px 18px;font-size:13px;font-weight:600;">Con esquema FERR: ${estados.length}</div>
+                <div style="background:#ff3b30;color:white;border-radius:12px;padding:10px 18px;font-size:13px;font-weight:600;">Entrada vencida: ${vencidos.length}</div>
+                <div style="background:#ff9f0a;color:white;border-radius:12px;padding:10px 18px;font-size:13px;font-weight:600;">En proceso: ${enProceso.length}</div>
+                <div style="background:#28cd41;color:white;border-radius:12px;padding:10px 18px;font-size:13px;font-weight:600;">Esquema completo: ${completos.length}</div>
+            </div>`;
+
+            const renderTabla = (grupo, color, titulo, icono) => {
+                if (grupo.length === 0) return '';
+                let t = `<div style="margin-bottom:6px;font-size:13px;font-weight:700;color:${color};"><i class="fas ${icono}"></i> ${titulo} (${grupo.length})</div>`;
+                t += `<table style="width:100%;border-collapse:collapse;font-size:13px;margin-bottom:20px;">
+                    <thead><tr style="background:${color};color:white;">
+                        <th style="padding:9px 12px;text-align:left;border-radius:8px 0 0 0;">Nombre</th>
+                        <th style="padding:9px 12px;text-align:left;">RUT</th>
+                        <th style="padding:9px 12px;text-align:left;">F. Ingreso EUE</th>
+                        <th style="padding:9px 12px;text-align:left;">Sanción</th>
+                        <th style="padding:9px 12px;text-align:left;">Entrada</th>
+                        <th style="padding:9px 12px;text-align:left;">Intermedia(s)</th>
+                        <th style="padding:9px 12px;text-align:left;">Salida</th>
+                        <th style="padding:9px 12px;text-align:left;border-radius:0 8px 0 0;">Riesgo actual</th>
+                    </tr></thead><tbody>`;
+                grupo.sort((a,b) => new Date(a.j.fechaIngresoEUE||0)-new Date(b.j.fechaIngresoEUE||0)).forEach((x,i) => {
+                    const bg = i%2===0?'#ffffff':'#f5f5f7';
+                    const entradaTxt = x.e.entradaReg ? formatDate(x.e.entradaReg.fecha) : (x.e.entradaVencida ? '<span style="color:#ff3b30;font-weight:600;">VENCIDA</span>' : (x.e.entradaRequerida ? '<span style="color:#ff9f0a;font-weight:600;">Pendiente</span>' : '—'));
+                    const intermediaTxt = x.e.intermediasRequeridas ? `${x.e.intermediaRegs.length}/${x.e.intermediasRequeridas}` : '—';
+                    const salidaTxt = x.e.salidaReg ? formatDate(x.e.salidaReg.fecha) : (x.e.salidaRequerida ? '<span style="color:#ff9f0a;font-weight:600;">Pendiente</span>' : '—');
+                    const riesgoTxt = x.e.riesgoActual ? `<span style="background:${colorRiesgoFerr[x.e.riesgoActual]};color:white;border-radius:8px;padding:3px 10px;font-size:12px;font-weight:600;">${iconRiesgoFerr[x.e.riesgoActual]} ${x.e.riesgoActual}</span>` : '—';
+                    t += `<tr style="background:${bg};cursor:pointer;" onclick="mostrarFerrDetalle('${x.j.id}')">
+                        <td style="padding:8px 12px;font-weight:600;color:#1d1d1f;">${x.j.nombre}</td>
+                        <td style="padding:8px 12px;color:#555;">${x.j.rut||'—'}</td>
+                        <td style="padding:8px 12px;color:#555;">${formatDate(x.j.fechaIngresoEUE)}</td>
+                        <td style="padding:8px 12px;color:#555;">${formatSancionTexto(x.j)}</td>
+                        <td style="padding:8px 12px;">${entradaTxt}</td>
+                        <td style="padding:8px 12px;">${intermediaTxt}</td>
+                        <td style="padding:8px 12px;">${salidaTxt}</td>
+                        <td style="padding:8px 12px;">${riesgoTxt}</td>
+                    </tr>`;
+                });
+                t += '</tbody></table>';
+                return t;
+            };
+
+            html += renderTabla(vencidos, '#ff3b30', 'Entrada vencida — sin aplicar (más de 45 días)', 'fa-exclamation-circle');
+            html += renderTabla(enProceso, '#ff9f0a', 'En proceso', 'fa-clock');
+            html += renderTabla(completos, '#28cd41', 'Esquema completo', 'fa-check-circle');
+
+            if (estados.length === 0) {
+                html += '<p style="text-align:center;color:#888;padding:20px;">No hay jóvenes con datos de sanción para calcular el esquema FERR.</p>';
+            }
+
+            container.innerHTML = html;
+        }
+
+        function mostrarFerrDetalle(id) {
+            const j = jovenesVigentes.find(x => x.id === id);
+            if (!j) return;
+            const formatDate = d => { if(!d) return '—'; const [y,m,dia] = d.split('-'); return dia+'/'+m+'/'+y; };
+            const colorRiesgoFerr = { 'Bajo':'#28cd41', 'Intermedio':'#ff9f0a', 'Alto':'#ff3b30' };
+            const e = calcularEstadoFerr(j);
+
+            let filas = '';
+            (j.ferrs || []).sort((a,b) => new Date(a.fecha||0)-new Date(b.fecha||0)).forEach(f => {
+                const col = colorRiesgoFerr[f.riesgo] || '#888';
+                filas += `<div style="background:#f5f5f7;border-radius:10px;padding:12px;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center;">
+                    <div><p style="margin:0;font-weight:600;">${f.tipo}</p><p style="margin:0;font-size:12px;color:#888;">${formatDate(f.fecha)}</p></div>
+                    ${f.riesgo ? `<span style="background:${col};color:white;border-radius:8px;padding:4px 12px;font-size:12px;font-weight:600;">${f.riesgo}</span>` : ''}
+                </div>`;
+            });
+            if (!filas) filas = '<p style="color:#888;text-align:center;padding:10px;">Sin registros FERR.</p>';
+
+            document.getElementById('modalCrafftTitle').textContent = j.nombre + ' — FERR';
+            document.getElementById('modalCrafftContent').innerHTML = `
+                <div style="background:#eaf1fb;border-radius:12px;padding:14px;margin-bottom:14px;border:2px solid #1A4A8A;">
+                    <p style="margin:0 0 4px;font-size:12px;color:#888;font-weight:600;text-transform:uppercase;">Esquema requerido</p>
+                    <p style="margin:0;font-weight:600;color:#1A4A8A;">${e.esquema.requeridos.join(' → ') || 'Sin datos de sanción'} (${e.esquema.aniosSancion || 0} año(s) de sanción)</p>
+                </div>
+                ${filas}
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px;">
+                    <div style="background:#f5f5f7;border-radius:10px;padding:12px;">
+                        <p style="margin:0 0 4px;font-size:12px;color:#888;">F. Ingreso EUE</p>
+                        <p style="margin:0;font-weight:500;">${formatDate(j.fechaIngresoEUE)}</p>
+                    </div>
+                    <div style="background:#f5f5f7;border-radius:10px;padding:12px;">
+                        <p style="margin:0 0 4px;font-size:12px;color:#888;">RUT</p>
+                        <p style="margin:0;font-weight:500;">${j.rut||'—'}</p>
+                    </div>
+                </div>`;
+            document.getElementById('modalCrafft').style.display = 'flex';
+        }
+
         // ========== ORDENAR GRÁFICOS ==========
         const sortState = {};
+        // ========== PESTAÑAS DEL PANEL ESTADÍSTICO ==========
+        function switchStatsTab(tab) {
+            document.querySelectorAll('.stats-tab-panel').forEach(p => p.classList.toggle('active', p.dataset.tab === tab));
+            document.querySelectorAll('.stats-tab-btn').forEach(b => b.classList.toggle('active', b.dataset.tab === tab));
+        }
+
+        // Fija la barra de pestañas al hacer scroll dentro del panel (implementado en JS porque
+        // "position: sticky" no es confiable dentro de contenedores con scroll propio en algunos navegadores/móviles)
+        let statsTabsThreshold = null;
+        function calcularUmbralStatsTabsNav() {
+            const nav = document.getElementById('statsTabsNav');
+            const contentArea = document.getElementById('contentArea');
+            if (!nav || !contentArea) return;
+            const estabaFijo = nav.classList.contains('is-pinned');
+            if (estabaFijo) despinStatsTabsNav();
+            const navRect = nav.getBoundingClientRect();
+            const contentRect = contentArea.getBoundingClientRect();
+            statsTabsThreshold = contentArea.scrollTop + (navRect.top - contentRect.top);
+            if (estabaFijo) actualizarStatsTabsNav();
+        }
+
+        function despinStatsTabsNav() {
+            const nav = document.getElementById('statsTabsNav');
+            const spacer = document.getElementById('statsTabsNavSpacer');
+            if (!nav) return;
+            nav.classList.remove('is-pinned');
+            nav.style.top = '';
+            nav.style.left = '';
+            nav.style.width = '';
+            if (spacer) spacer.style.display = 'none';
+        }
+
+        function pinStatsTabsNav() {
+            const nav = document.getElementById('statsTabsNav');
+            const spacer = document.getElementById('statsTabsNavSpacer');
+            const contentArea = document.getElementById('contentArea');
+            if (!nav || !contentArea) return;
+            const contentRect = contentArea.getBoundingClientRect();
+            if (!nav.classList.contains('is-pinned')) {
+                spacer.style.height = nav.offsetHeight + 'px';
+                spacer.style.display = 'block';
+                nav.classList.add('is-pinned');
+            }
+            nav.style.top = contentRect.top + 'px';
+            nav.style.left = contentRect.left + 'px';
+            nav.style.width = contentRect.width + 'px';
+        }
+
+        function actualizarStatsTabsNav() {
+            const contentArea = document.getElementById('contentArea');
+            if (!contentArea || statsTabsThreshold === null) return;
+            if (contentArea.scrollTop >= statsTabsThreshold) {
+                pinStatsTabsNav();
+            } else {
+                despinStatsTabsNav();
+            }
+        }
+
+        function initStatsTabsSticky() {
+            const contentArea = document.getElementById('contentArea');
+            if (!contentArea) return;
+            calcularUmbralStatsTabsNav();
+            if (!contentArea.dataset.stickyListenerAttached) {
+                contentArea.addEventListener('scroll', actualizarStatsTabsNav);
+                window.addEventListener('resize', calcularUmbralStatsTabsNav);
+                contentArea.dataset.stickyListenerAttached = 'true';
+            }
+        }
+
         function sortChart(chartId) {
             const chartMap = { chartSanciones, chartFamilia, chartRangoEtario };
             const chart = chartMap[chartId];
@@ -3178,19 +3723,19 @@
             const data = todos.map(j => ({
                 'Nombre': j.nombre || '',
                 'RUT': j.rut || '',
-                'Fecha Nacimiento': j.fechaNacimiento || '',
+                'Fecha Nacimiento': fmtDDMMYYYY(j.fechaNacimiento),
                 'Edad': calcularEdadActual(j.fechaNacimiento) || j.edad || '',
                 'Género': j.genero || '',
                 'Nacionalidad': j.nacionalidad || '',
                 'Situación EUE': j.situacionEUE || '',
-                'Fecha de Egreso': j.fechaEgresoReal || '',
+                'Fecha de Egreso': fmtDDMMYYYY(j.fechaEgresoReal),
                 'Motivo de Egreso': j.motivoEgreso || '',
                 'Edad Ingreso': j.edadIngreso || '',
                 'Rango Etario': j.rangoEtario || '',
                 'Pertenencia Étnica': j.pertenenciaEtnica || '',
                 'Ruralidad': j.ruralidad || '',
                 'Tipo Joven': j.tipoJoven || '',
-                'Fecha Ingreso EUE': j.fechaIngresoEUE || '',
+                'Fecha Ingreso EUE': fmtDDMMYYYY(j.fechaIngresoEUE),
                 'Comuna/Ciudad': j.comuna || '',
                 'Dirección': j.direccion || '',
                 'Teléfono': j.telefono || '',
@@ -3215,7 +3760,7 @@
                 '¿Toma medicamentos?': j.tomaMedicamentos || '',
                 'Medicamentos': j.medicamentos || '',
                 'Discapacidad': j.discapacidad || '',
-                'Fecha CRAFFT/ASSIST': j.fechaCrafft || '',
+                'Fecha CRAFFT/ASSIST': fmtDDMMYYYY(j.fechaCrafft),
                 '¿Consumo drogas?': j.consumoDrogas || '',
                 'Tipo consumo': j.tipoConsumo || '',
                 'Tipo de droga': j.tipoDroga || '',
@@ -3230,7 +3775,7 @@
                 'Tribunal Ejecución': j.tribunalEjecucion || '',
                 'RIT Causa': j.ritCausa || '',
                 'RUC Causa': j.rucCausa || '',
-                'Fecha Derivación': j.fechaDerivacion || '',
+                'Fecha Derivación': fmtDDMMYYYY(j.fechaDerivacion),
                 'Delito 1': j.tipoDelito1 || '',
                 'Causal 1': j.causalIngreso1 || '',
                 'Delito 2': j.tipoDelito2 || '',
@@ -3245,7 +3790,7 @@
                 'Total días': (() => { const sd = calcularDatosSancion(j); return sd.totalDiasSentencia; })(),
                 'Días cumplidos': (() => { const sd = calcularDatosSancion(j); return sd.diasCumplidos; })(),
                 'Días restantes': (() => { const sd = calcularDatosSancion(j); return sd.diasRestantes; })(),
-                'Fecha egreso': (() => { const sd = calcularDatosSancion(j); return sd.fechaEgresoEstimada; })(),
+                'Fecha egreso': (() => { const sd = calcularDatosSancion(j); return fmtDDMMYYYY(sd.fechaEgresoEstimada); })(),
                 'Categoría Sanción': getCategoriaSancionReal(j),
                 'Obs. Judiciales': j.obsJudiciales || '',
                 'Nivel Educacional': j.nivelEducacional || '',
@@ -3265,16 +3810,16 @@
                 '¿Programa protección?': j.enProgramaProteccion || '',
                 'Tipo Programa': j.tipoPrograma || '',
                 'Nombre Programa': j.nombrePrograma || '',
-                'Fecha Ingreso Programa': j.fechaIngresoPrograma || '',
+                'Fecha Ingreso Programa': fmtDDMMYYYY(j.fechaIngresoPrograma),
                 'Obs. Protección': j.obsProteccion || '',
                 'RSH': j.tieneRSH || '',
                 'Tramo RSH': j.tramoRSH || '',
                 'Ingreso Familiar': j.ingresoFamiliar || '',
                 'Integrantes Hogar': j.integrantesHogar || '',
                 'Ingreso Per Cápita': j.ingresoPerCapita || '',
-                'Fecha Creación': j.fechaCreacion || '',
-                'Fecha Actualización': j.fechaActualizacion || '',
-                'Fecha No Vigente': j.fechaNoVigente || ''
+                'Fecha Creación': fmtDDMMYYYY(j.fechaCreacion),
+                'Fecha Actualización': fmtDDMMYYYY(j.fechaActualizacion),
+                'Fecha No Vigente': fmtDDMMYYYY(j.fechaNoVigente)
             }));
             
             const ws = XLSX.utils.json_to_sheet(data);
@@ -3325,19 +3870,19 @@
             addSection('DATOS PERSONALES');
             addLine('Nombre', j.nombre);
             addLine('RUN/RUT', j.rut);
-            addLine('Fecha Nacimiento', j.fechaNacimiento);
+            addLine('Fecha Nacimiento', fmtDDMMYYYY(j.fechaNacimiento));
             addLine('Edad', calcularEdadActual(j.fechaNacimiento) ? calcularEdadActual(j.fechaNacimiento) + ' años' : (j.edad ? j.edad + ' años' : ''));
             addLine('Género', j.genero);
             addLine('Nacionalidad', j.nacionalidad);
             addLine('Situación EUE', j.situacionEUE);
-            addLine('Fecha de Egreso', j.fechaEgresoReal);
+            addLine('Fecha de Egreso', fmtDDMMYYYY(j.fechaEgresoReal));
             addLine('Motivo de Egreso', j.motivoEgreso);
             addLine('Edad Ingreso', j.edadIngreso);
             addLine('Rango Etario', j.rangoEtario);
             addLine('Pertenencia Étnica', j.pertenenciaEtnica);
             addLine('Ruralidad', j.ruralidad);
             addLine('Tipo Joven', j.tipoJoven);
-            addLine('Fecha Ingreso EUE', j.fechaIngresoEUE);
+            addLine('Fecha Ingreso EUE', fmtDDMMYYYY(j.fechaIngresoEUE));
             addLine('Comuna/Ciudad', j.comuna);
             addLine('Dirección', j.direccion);
             addLine('Teléfono', j.telefono);
@@ -3372,8 +3917,8 @@
             addLine('¿Toma medicamentos?', j.tomaMedicamentos);
             addLine('Medicamentos', j.medicamentos);
             addLine('Discapacidad', j.discapacidad);
-            addLine('Fecha aprobación Plan Inicial', j.fechaAprobacionPlan);
-            addLine('Fecha CRAFFT/ASSIST', j.fechaCrafft);
+            addLine('Fecha aprobación Plan Inicial', fmtDDMMYYYY(j.fechaAprobacionPlan));
+            addLine('Fecha CRAFFT/ASSIST', fmtDDMMYYYY(j.fechaCrafft));
             if (j.tuvoNecesidadUrgencia === 'Sí') {
                 addLine('Necesidad de urgencia al ingreso', 'SÍ — ' + (j.tipoNecesidadUrgencia || ''));
                 addLine('  Salud', j.urgenciaSalud || 'No');
@@ -3403,7 +3948,7 @@
             addLine('Tribunal Ejecución', j.tribunalEjecucion);
             addLine('RIT Causa', j.ritCausa);
             addLine('RUC Causa', j.rucCausa);
-            addLine('Fecha Derivación', j.fechaDerivacion);
+            addLine('Fecha Derivación', fmtDDMMYYYY(j.fechaDerivacion));
             addLine('Delito 1', j.tipoDelito1);
             addLine('Causal 1', j.causalIngreso1);
             if (j.tipoDelito2) { addLine('Delito 2', j.tipoDelito2); addLine('Causal 2', j.causalIngreso2); }
@@ -3415,7 +3960,7 @@
             addLine('Total días', sdPDF.totalDiasSentencia);
             addLine('Días cumplidos', sdPDF.diasCumplidos);
             addLine('Días restantes', sdPDF.diasRestantes);
-            addLine('Fecha egreso', sdPDF.fechaEgresoEstimada);
+            addLine('Fecha egreso', fmtDDMMYYYY(sdPDF.fechaEgresoEstimada));
             addLine('Categoría', getCategoriaSancionReal(j));
             addLine('Observaciones', j.obsJudiciales);
             addSpacer();
@@ -3455,7 +4000,7 @@
             if (j.enProgramaProteccion === 'Sí') {
                 addLine('  Tipo Programa', j.tipoPrograma);
                 addLine('  Nombre Programa', j.nombrePrograma);
-                addLine('  Fecha Ingreso', j.fechaIngresoPrograma);
+                addLine('  Fecha Ingreso', fmtDDMMYYYY(j.fechaIngresoPrograma));
             }
             addLine('Observaciones', j.obsProteccion);
             addSpacer();
@@ -3517,7 +4062,7 @@
             // Hoja 6: Ingreso sin contacto
             const sinContacto = todos.filter(j => j.situacionEUE === 'Ingreso sin contacto');
             XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(
-                sinContacto.map(j => ({ 'Nombre': j.nombre, 'RUT': j.rut||'', 'Comuna': j.comuna||'', 'Fecha Ingreso EUE': j.fechaIngresoEUE||'' }))
+                sinContacto.map(j => ({ 'Nombre': j.nombre, 'RUT': j.rut||'', 'Comuna': j.comuna||'', 'Fecha Ingreso EUE': fmtDDMMYYYY(j.fechaIngresoEUE) }))
             ), "Ingreso Sin Contacto");
 
             // Hoja 7: Necesidades de urgencia
@@ -3626,7 +4171,7 @@
                 'Salud': j.urgenciaSalud || 'No',
                 'Maltrato Físico/Psicológico': j.urgenciaMaltrato || 'No',
                 'Abuso Sexual': j.urgenciaAbusoSexual || 'No',
-                'Fecha Ingreso EUE': j.fechaIngresoEUE || '',
+                'Fecha Ingreso EUE': fmtDDMMYYYY(j.fechaIngresoEUE),
                 'Situación EUE': j.situacionEUE || ''
             }));
             XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(datos), 'Necesidades Urgencia');
