@@ -167,6 +167,48 @@
             box-shadow: 0 8px 20px rgba(102, 126, 234, 0.3);
         }
 
+
+        .btn-quick {
+            color: white;
+            padding: 6px 10px;
+            border-radius: 20px;
+            border: none;
+            font-weight: 500;
+            font-size: 12px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            transition: all 0.2s ease;
+            white-space: nowrap;
+        }
+        .header-actions { flex-wrap: nowrap; gap: 8px; min-width: 0; }
+        .header-actions button { flex-shrink: 0; padding-left: 12px; padding-right: 12px; font-size: 13px; }
+        .header-actions .btn-quick { padding: 6px 10px; font-size: 12px; }
+        @media (max-width: 1500px) { .header-subtitle { display: none; } }
+        @media (max-width: 1350px) { .btn-quick .qlabel { display: none; } .btn-quick { padding: 6px 10px; } }
+        .btn-quick:hover { transform: translateY(-2px); box-shadow: 0 6px 16px rgba(0,0,0,0.18); }
+        .btn-quick .qcount { background: rgba(255,255,255,0.28); border-radius: 10px; padding: 1px 8px; font-size: 12px; font-weight: 700; }
+        .btn-quick.q-ingresos { background: linear-gradient(135deg,#0071e3,#00a2ff); }
+        .btn-quick.q-egresos { background: linear-gradient(135deg,#8e8e93,#636366); }
+        .btn-quick.q-sincontacto { background: linear-gradient(135deg,#e67e22,#f5a623); }
+        .btn-quick.q-vigentes { background: linear-gradient(135deg,#28cd41,#1a9e2f); }
+
+        .quick-modal { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.45); z-index:9000; align-items:center; justify-content:center; padding:20px; }
+        .quick-modal.show { display:flex; }
+        .quick-box { background:#fff; border-radius:16px; width:100%; max-width:900px; max-height:85vh; display:flex; flex-direction:column; box-shadow:0 20px 60px rgba(0,0,0,0.3); }
+        .quick-head { padding:18px 22px; border-bottom:1px solid var(--apple-border); display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap; }
+        .quick-head h3 { font-size:18px; font-weight:600; display:flex; align-items:center; gap:8px; }
+        .quick-tools { display:flex; align-items:center; gap:8px; }
+        .quick-tools input[type=month] { padding:6px 10px; border:1px solid var(--apple-border); border-radius:10px; font-size:13px; }
+        .quick-body { padding:16px 22px 22px; overflow:auto; }
+        .quick-close { background:none; border:none; font-size:20px; cursor:pointer; color:var(--apple-gray); }
+        .quick-table { width:100%; border-collapse:collapse; font-size:13px; }
+        .quick-table th { color:white; padding:10px 12px; text-align:left; }
+        .quick-table td { padding:9px 12px; color:#555; }
+        .quick-table tbody tr { cursor:pointer; }
+        .quick-table tbody tr:hover { background:#eef5ff !important; }
+
         .main-content {
             flex: 1;
             display: flex;
@@ -1026,6 +1068,21 @@
         </div>
     </div>
 
+    <!-- Modal listas rápidas -->
+    <div class="quick-modal" id="quickModal" onclick="if(event.target===this) cerrarListaRapida()">
+        <div class="quick-box">
+            <div class="quick-head">
+                <h3 id="quickTitle"></h3>
+                <div class="quick-tools">
+                    <input type="month" id="quickMes" onchange="renderListaRapida()" style="display:none;">
+                    <button class="btn-excel" onclick="exportarListaRapida()" style="padding:6px 14px;font-size:13px;"><i class="fas fa-file-excel"></i> Excel</button>
+                    <button class="quick-close" onclick="cerrarListaRapida()"><i class="fas fa-times"></i></button>
+                </div>
+            </div>
+            <div class="quick-body" id="quickBody"></div>
+        </div>
+    </div>
+
     <div class="app-container" id="appContainer" style="display: none;">
         <header class="header">
             <div class="header-content">
@@ -1034,6 +1091,10 @@
             </div>
             <div class="header-actions">
                 <button class="btn-stats" onclick="toggleDashboard()"><i class="fas fa-chart-pie"></i> Panel Estadístico</button>
+                <button class="btn-quick q-ingresos" onclick="abrirListaRapida('ingresos')" title="Jóvenes ingresados durante el mes"><i class="fas fa-user-plus"></i><span class="qlabel">Ingresos mes</span> <span class="qcount" id="qcIngresos">0</span></button>
+                <button class="btn-quick q-egresos" onclick="abrirListaRapida('egresos')" title="Jóvenes egresados durante el mes"><i class="fas fa-user-minus"></i><span class="qlabel">Egresos mes</span> <span class="qcount" id="qcEgresos">0</span></button>
+                <button class="btn-quick q-sincontacto" onclick="abrirListaRapida('sincontacto')" title="Ingresos sin contacto"><i class="fas fa-user-slash"></i><span class="qlabel">Sin contacto</span> <span class="qcount" id="qcSinContacto">0</span></button>
+                <button class="btn-quick q-vigentes" onclick="abrirListaRapida('vigentes')" title="Jóvenes vigentes"><i class="fas fa-user-check"></i><span class="qlabel">Vigentes</span> <span class="qcount" id="qcVigentes">0</span></button>
                 <button class="btn-excel" onclick="exportarExcelCompleto()"><i class="fas fa-file-excel"></i> Exportar Excel</button>
                 <button class="btn-icon active" onclick="toggleView('vigentes')" id="btnVigentes"><i class="fas fa-users"></i> Vigentes</button>
                 <button class="btn-icon" onclick="toggleView('noVigentes')" id="btnNoVigentes"><i class="fas fa-archive"></i> No Vigentes</button>
@@ -2035,6 +2096,7 @@
         }
 
         function renderList() {
+            try { actualizarContadoresRapidos(); } catch(e) {}
             const c = document.getElementById('jovenesList');
             const j = currentView === 'vigentes' ? jovenesVigentes : jovenesNoVigentes;
             const s = document.getElementById('searchInput')?.value.toLowerCase() || '';
@@ -2346,6 +2408,97 @@
                 }
                 closePasswordModal();
             } else { alert('Contraseña incorrecta'); }
+        }
+
+
+        // ========== LISTAS RÁPIDAS DEL ENCABEZADO ==========
+        let quickTipo = null, quickLista = [];
+
+        function mesActualStr() {
+            const h = new Date();
+            return h.getFullYear() + '-' + String(h.getMonth()+1).padStart(2,'0');
+        }
+
+        function todosLosJovenesUnicos() {
+            const mapa = new Map();
+            jovenesVigentes.forEach(j => mapa.set(j.id, { j, lista: 'vigentes' }));
+            jovenesNoVigentes.forEach(j => { if (!mapa.has(j.id)) mapa.set(j.id, { j, lista: 'noVigentes' }); });
+            return [...mapa.values()];
+        }
+
+        function obtenerListaRapida(tipo, mes) {
+            const todos = todosLosJovenesUnicos();
+            const enMes = f => f && String(f).slice(0,7) === mes;
+            if (tipo === 'ingresos') return todos.filter(x => enMes(x.j.fechaIngresoEUE)).sort((a,b) => (b.j.fechaIngresoEUE||'').localeCompare(a.j.fechaIngresoEUE||''));
+            if (tipo === 'egresos') return todos.filter(x => enMes(x.j.fechaEgresoReal)).sort((a,b) => (b.j.fechaEgresoReal||'').localeCompare(a.j.fechaEgresoReal||''));
+            if (tipo === 'sincontacto') return todos.filter(x => x.lista === 'vigentes' && x.j.situacionEUE === 'Ingreso sin contacto').sort((a,b) => (b.j.fechaIngresoEUE||'').localeCompare(a.j.fechaIngresoEUE||''));
+            if (tipo === 'vigentes') return todos.filter(x => x.lista === 'vigentes' && x.j.situacionEUE === 'Vigente').sort((a,b) => (a.j.nombre||'').localeCompare(b.j.nombre||''));
+            return [];
+        }
+
+        function actualizarContadoresRapidos() {
+            const mes = mesActualStr();
+            const set = (id, t) => { const el = document.getElementById(id); if (el) el.textContent = obtenerListaRapida(t, mes).length; };
+            set('qcIngresos','ingresos'); set('qcEgresos','egresos'); set('qcSinContacto','sincontacto'); set('qcVigentes','vigentes');
+        }
+
+        function abrirListaRapida(tipo) {
+            quickTipo = tipo;
+            const mesInput = document.getElementById('quickMes');
+            const usaMes = tipo === 'ingresos' || tipo === 'egresos';
+            mesInput.style.display = usaMes ? 'inline-block' : 'none';
+            if (usaMes) mesInput.value = mesActualStr();
+            document.getElementById('quickModal').classList.add('show');
+            renderListaRapida();
+        }
+
+        function cerrarListaRapida() { document.getElementById('quickModal').classList.remove('show'); }
+
+        function renderListaRapida() {
+            const tipo = quickTipo;
+            const mes = document.getElementById('quickMes').value || mesActualStr();
+            quickLista = obtenerListaRapida(tipo, mes);
+            const cfg = {
+                ingresos:    { titulo: 'Jóvenes ingresados durante el mes', icono: 'fa-user-plus',  color: '#0071e3', colFecha: 'Fecha ingreso', fecha: j => j.fechaIngresoEUE },
+                egresos:     { titulo: 'Jóvenes egresados durante el mes',  icono: 'fa-user-minus', color: '#636366', colFecha: 'Fecha egreso',  fecha: j => j.fechaEgresoReal },
+                sincontacto: { titulo: 'Ingresos sin contacto',             icono: 'fa-user-slash', color: '#e67e22', colFecha: 'Fecha ingreso', fecha: j => j.fechaIngresoEUE },
+                vigentes:    { titulo: 'Jóvenes vigentes',                  icono: 'fa-user-check', color: '#1a9e2f', colFecha: 'Fecha ingreso', fecha: j => j.fechaIngresoEUE }
+            }[tipo];
+            document.getElementById('quickTitle').innerHTML = `<i class="fas ${cfg.icono}" style="color:${cfg.color}"></i> ${cfg.titulo} <span style="font-size:14px;color:#888;font-weight:500;">(${quickLista.length})</span>`;
+            const body = document.getElementById('quickBody');
+            if (!quickLista.length) { body.innerHTML = '<p style="text-align:center;color:#888;padding:30px;">No hay jóvenes para mostrar.</p>'; return; }
+            const esc = t => String(t == null ? '' : t).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+            let html = `<div style="overflow-x:auto;"><table class="quick-table"><thead><tr style="background:${cfg.color};">
+                <th style="border-radius:8px 0 0 0;">N°</th><th>Nombre</th><th>RUT</th><th>Comuna</th><th style="border-radius:0 8px 0 0;">${cfg.colFecha}</th></tr></thead><tbody>`;
+            quickLista.forEach((x, i) => {
+                const j = x.j;
+                html += `<tr style="background:${i%2===0?'#fff':'#f7f9fc'};" onclick="abrirJovenDesdeLista('${esc(j.id)}','${x.lista}')">
+                    <td style="color:#888;">${i+1}</td>
+                    <td style="font-weight:600;color:#1d1d1f;">${esc(j.nombre)}</td>
+                    <td>${esc(j.rut||'—')}</td>
+                    <td>${esc(j.comuna||'—')}</td>
+                    <td>${esc(fmtDDMMYYYY(cfg.fecha(j))||'—')}</td></tr>`;
+            });
+            body.innerHTML = html + '</tbody></table></div>';
+        }
+
+        function abrirJovenDesdeLista(id, lista) {
+            cerrarListaRapida();
+            toggleView(lista);
+            selectJoven(id);
+        }
+
+        function exportarListaRapida() {
+            if (!quickLista.length) { alert('No hay datos para exportar.'); return; }
+            const filas = quickLista.map(x => ({
+                'Nombre': x.j.nombre || '', 'RUT': x.j.rut || '', 'Comuna': x.j.comuna || '',
+                'Situación EUE': x.j.situacionEUE || '',
+                'Fecha ingreso EUE': fmtDDMMYYYY(x.j.fechaIngresoEUE),
+                'Fecha egreso': fmtDDMMYYYY(x.j.fechaEgresoReal)
+            }));
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(filas), 'Listado');
+            XLSX.writeFile(wb, 'jovenes_' + quickTipo + '_' + new Date().toISOString().split('T')[0] + '.xlsx');
         }
 
         function toggleDashboard() {
